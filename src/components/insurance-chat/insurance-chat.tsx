@@ -42,26 +42,6 @@ export class InsuranceChat {
   private sessionId: string;
   private chatInterface!: HTMLElement; //scroll
 
-  //scrolling
-  updateVisibility() {
-    const chatInterface = this.chatInterface;
-
-    // Get all questions and answers
-    const allQuestions = chatInterface.querySelectorAll('.previous-answer, .current-question');
-    const totalQuestions = allQuestions.length;
-
-    allQuestions.forEach((question, index) => {
-      // Hide all but the last two elements
-      if (index < totalQuestions - 2) {
-        question.classList.add('hidden'); // Hide older elements
-      } else {
-        question.classList.remove('hidden'); // Show the last two
-      }
-    });
-
-    // Automatically scroll to the bottom to show the latest two elements
-    chatInterface.scrollTop = chatInterface.scrollHeight;
-  }
   updateScroll() {
     const chatInterface = this.chatInterface;
 
@@ -70,40 +50,6 @@ export class InsuranceChat {
       top: chatInterface.scrollHeight,
       behavior: 'smooth',
     });
-  }
-  scrollToBottom() {
-    this.chatInterface.scrollTop = this.chatInterface.scrollHeight;
-  }
-  // Function to simulate additional height
-  updateHeight() {
-    const chatInterface = this.chatInterface;
-
-    // Select elements
-    const currentQuestion = chatInterface.querySelector('.current-question') as HTMLElement;
-    const previousAnswers = chatInterface.querySelectorAll('.previous-answer');
-    const lastPreviousAnswer = previousAnswers[previousAnswers.length - 1] as HTMLElement;
-
-    // Ensure fake-bottom-space exists
-    let fakeBottom = chatInterface.querySelector('.fake-bottom-space') as HTMLElement;
-    if (!fakeBottom) {
-      fakeBottom = document.createElement('div');
-      fakeBottom.classList.add('fake-bottom-space');
-      chatInterface.appendChild(fakeBottom);
-    }
-
-    // Calculate height for fake bottom to fit last previous answer and current question
-    const lastAnswerHeight = lastPreviousAnswer ? lastPreviousAnswer.offsetHeight : 0;
-    const currentQuestionHeight = currentQuestion ? currentQuestion.offsetHeight : 0;
-    const fakeBottomHeight = chatInterface.offsetHeight - (lastAnswerHeight + currentQuestionHeight);
-
-    // Update fake bottom height and ensure it's the last element
-    fakeBottom.style.height = `${fakeBottomHeight > 0 ? fakeBottomHeight : 0}px`;
-    if (!fakeBottom.isSameNode(chatInterface.lastElementChild)) {
-      chatInterface.appendChild(fakeBottom); // Ensure it's always the last element
-    }
-
-    // Scroll to show the last previous answer and the current question
-    // chatInterface.scrollTop = chatInterface.scrollHeight;
   }
 
   componentWillLoad() {
@@ -126,15 +72,12 @@ export class InsuranceChat {
   componentDidLoad() {
     this.initializeTyping(this.currentQuestion.text);
     this.setupIntersectionObserver();
-    // this.updateHeight(); //scroll
-    // this.updateVisibility(); //scroll
+
     this.updateScroll();
   }
 
   // Lifecycle method: Runs after each update
   componentDidUpdate() {
-    // this.updateVisibility();
-    // this.updateHeight(); //scroll
     this.updateScroll();
   }
 
@@ -202,10 +145,19 @@ export class InsuranceChat {
               } else if (this.userName && this.primaryInput) {
                 this.primaryInput.focus();
               }
-              const currentQuestion = this.el.shadowRoot.querySelector('.current-question');
+              // const currentQuestion = this.el.shadowRoot.querySelector('.current-question');
               // if (currentQuestion) {
               //   currentQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
               // }
+
+              const chatInterface = this.el.shadowRoot.querySelector('.chat-interface');
+              // const chatInterface = this.chatInterface;
+
+              // Smoothly scroll to the bottom
+              chatInterface.scrollTo({
+                top: chatInterface.scrollHeight,
+                behavior: 'smooth',
+              });
               // this.chatInterface.scrollTop = this.chatInterface.scrollHeight;
             }, 100);
             resolve();
@@ -569,55 +521,56 @@ export class InsuranceChat {
     return '*'.repeat(password.length); // Replace each character with '*'
   }
 
-  // private renderPreviousAnswers() {
-  //   // Create a copy of answers array and reverse it
-  //   const reversedAnswers = [...this.answers].reverse();
-
-  //   return reversedAnswers.map((answer, index) => {
-  //     // Calculate the original index for edit functionality
-  //     const originalIndex = this.answers.length - 1 - index;
-
-  //     return (
-  //       <div class="previous-answer" key={originalIndex}>
-  //         <div class="answer-header">{answer.question}</div>
-  //         <div class="answer-content">
-  //           <span>
-  //             {/\bpassword\b/i.test(answer.type)
-  //               ? this.maskPassword(answer.answer.toString())
-  //               : /\bssn\b/i.test(answer.type)
-  //               ? this.maskSSN(answer.answer.toString())
-  //               : typeof answer.answer === 'string'
-  //               ? answer.answer
-  //               : JSON.stringify(answer.answer)}
-  //           </span>
-  //           <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
-  //         </div>
-  //       </div>
-  //     );
-  //   });
-  // }
-
+  /*This will reverse the previous ans*/
   private renderPreviousAnswers() {
-    return this.answers.map((answer, index) => (
-      <div class="previous-answer" key={index}>
-        <div class="answer-header">{answer.question}</div>
-        <div class="answer-content">
-          <span>
-            {/\bpassword\b/i.test(answer.type)
-              ? this.maskPassword(answer.answer.toString()) // Mask passwords completely
-              : /\bssn\b/i.test(answer.type)
-              ? this.maskSSN(answer.answer.toString()) // Mask SSNs
-              : typeof answer.answer === 'string'
-              ? answer.answer
-              : JSON.stringify(answer.answer)}
-          </span>
-          {/* <span>{/\bpassword\b/i.test(answer.question) ? '******' : typeof answer.answer === 'string' ? answer.answer : JSON.stringify(answer.answer)}</span> */}
-          {/* <span>{typeof answer.answer === 'string' ? answer.answer : JSON.stringify(answer.answer)}</span> */}
-          <button class="edit-button" onClick={() => this.showEditConfirmation(index)} aria-label="Edit answer"></button>
+    // Create a copy of answers array and reverse it
+    const reversedAnswers = [...this.answers].reverse();
+
+    return reversedAnswers.map((answer, index) => {
+      // Calculate the original index for edit functionality
+      const originalIndex = this.answers.length - 1 - index;
+
+      return (
+        <div class="previous-answer" key={originalIndex}>
+          <div class="answer-header">{answer.question}</div>
+          <div class="answer-content">
+            <span>
+              {/\bpassword\b/i.test(answer.type)
+                ? this.maskPassword(answer.answer.toString())
+                : /\bssn\b/i.test(answer.type)
+                ? this.maskSSN(answer.answer.toString())
+                : typeof answer.answer === 'string'
+                ? answer.answer
+                : JSON.stringify(answer.answer)}
+            </span>
+            <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
+          </div>
         </div>
-      </div>
-    ));
+      );
+    });
   }
+
+  // private renderPreviousAnswers() {
+  //   return this.answers.map((answer, index) => (
+  //     <div class="previous-answer" key={index}>
+  //       <div class="answer-header">{answer.question}</div>
+  //       <div class="answer-content">
+  //         <span>
+  //           {/\bpassword\b/i.test(answer.type)
+  //             ? this.maskPassword(answer.answer.toString()) // Mask passwords completely
+  //             : /\bssn\b/i.test(answer.type)
+  //             ? this.maskSSN(answer.answer.toString()) // Mask SSNs
+  //             : typeof answer.answer === 'string'
+  //             ? answer.answer
+  //             : JSON.stringify(answer.answer)}
+  //         </span>
+  //         {/* <span>{/\bpassword\b/i.test(answer.question) ? '******' : typeof answer.answer === 'string' ? answer.answer : JSON.stringify(answer.answer)}</span> */}
+  //         {/* <span>{typeof answer.answer === 'string' ? answer.answer : JSON.stringify(answer.answer)}</span> */}
+  //         <button class="edit-button" onClick={() => this.showEditConfirmation(index)} aria-label="Edit answer"></button>
+  //       </div>
+  //     </div>
+  //   ));
+  // }
 
   private renderCurrentQuestion() {
     if (!this.currentQuestion) return null;
@@ -687,12 +640,12 @@ export class InsuranceChat {
   render() {
     return (
       <div class="app-wrapper">
-        <app-navbar></app-navbar>
         <div class="container">
+          <app-navbar></app-navbar>
           {/* <div class="chat-interface"> */}
           <div class="chat-interface" ref={el => (this.chatInterface = el as HTMLElement)}>
-            {this.renderPreviousAnswers()}
             {this.renderCurrentQuestion()}
+            {this.renderPreviousAnswers()}
           </div>
           {this.renderEditModal()}
         </div>
