@@ -1120,27 +1120,64 @@ export class InsuranceChat {
     return reversedAnswers.map((answer, index) => {
       const originalIndex = this.answers.length - 1 - index;
 
-      const isPassword = answer.type === 'Password'; // Direct type check
+      // Handle comma-separated answers
+      const displayAnswer = answer.answer
+        .toString()
+        .split(', ')
+        .map((part, partIndex) => {
+          // Check if this part should be masked based on component type
+          if (Array.isArray(this.currentQuestion.component)) {
+            const componentType = this.currentQuestion.component[partIndex]?.type;
+            if (componentType === 'Password') {
+              return this.maskPassword(part);
+            }
+            if (componentType === 'SSN') {
+              return this.maskSSN(part);
+            }
+          }
+          return part;
+        })
+        .join(', ');
 
       return (
         <div class="previous-answer" key={originalIndex}>
           <div class="answer-header">{answer.question}</div>
           <div class="answer-content">
-            <span>
-              {isPassword
-                ? this.maskPassword(answer.answer.toString())
-                : /\bssn\b/i.test(answer.type.toLowerCase())
-                ? this.maskSSN(answer.answer.toString())
-                : typeof answer.answer === 'string'
-                ? answer.answer
-                : JSON.stringify(answer.answer)}
-            </span>
+            <span>{displayAnswer}</span>
             <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
           </div>
         </div>
       );
     });
   }
+
+  // private renderPreviousAnswers() {
+  //   const reversedAnswers = [...this.answers].reverse();
+
+  //   return reversedAnswers.map((answer, index) => {
+  //     const originalIndex = this.answers.length - 1 - index;
+
+  //     const isPassword = answer.type === 'Password'; // Direct type check
+
+  //     return (
+  //       <div class="previous-answer" key={originalIndex}>
+  //         <div class="answer-header">{answer.question}</div>
+  //         <div class="answer-content">
+  //           <span>
+  //             {isPassword
+  //               ? this.maskPassword(answer.answer.toString())
+  //               : /\bssn\b/i.test(answer.type.toLowerCase())
+  //               ? this.maskSSN(answer.answer.toString())
+  //               : typeof answer.answer === 'string'
+  //               ? answer.answer
+  //               : JSON.stringify(answer.answer)}
+  //           </span>
+  //           <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
+  //         </div>
+  //       </div>
+  //     );
+  //   });
+  // }
 
   /*This will reverse the previous ans*/
   // private renderPreviousAnswers() {
