@@ -12,7 +12,7 @@ export interface FormComponent {
   label: string;
   format?: string;
   options?: string[];
-  validationRules?: ValidationRule[];
+  validationRules?: ValidationRule | ValidationRule[]; // Updated to handle both single rule and array
 }
 
 export interface BedrockResponse {
@@ -22,9 +22,38 @@ export interface BedrockResponse {
   progress: number;
 }
 
-export const validateInput = (value: string, rules?: ValidationRule[]): string => {
+//old code
+// export const validateInput = (value: string, rules?: ValidationRule[]): string => {
+//   if (!rules) return '';
+
+//   for (const rule of rules) {
+//     if (rule.type === 'Required' && !value.trim()) {
+//       return rule.message;
+//     }
+//     if (rule.type === 'CustomRule' && rule.validate && !rule.validate(value)) {
+//       return rule.message;
+//     }
+//   }
+
+//   return '';
+// };
+
+//new code
+export const validateInput = (value: string, rules?: ValidationRule | ValidationRule[]): string => {
   if (!rules) return '';
 
+  // Handle single rule object
+  if (!Array.isArray(rules)) {
+    if (rules.type === 'Required' && !value.trim()) {
+      return rules.message;
+    }
+    if (rules.type === 'CustomRule' && rules.validate && !rules.validate(value)) {
+      return rules.message;
+    }
+    return '';
+  }
+
+  // Handle array of rules
   for (const rule of rules) {
     if (rule.type === 'Required' && !value.trim()) {
       return rule.message;
@@ -64,7 +93,7 @@ export const getMockBedrockResponse1 = async (sessionId: string, userName: strin
     const url2 = 'http://localhost:7000/chat2';
 
     const response = await axios.post(
-      url2,
+      url1,
       {
         session_id: sessionId,
         message: `${inquiry}`,

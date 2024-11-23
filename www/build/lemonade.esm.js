@@ -43,7 +43,7 @@ var patchCloneNodeFix = (HTMLElementPrototype) => {
 
 patchBrowser().then(async (options) => {
   await globalScripts();
-  return bootstrapLazy([["app-navbar",[[0,"app-navbar"]]],["insurance-chat",[[1,"insurance-chat",{"currentQuestion":[32],"answers":[32],"firstName":[32],"lastName":[32],"primaryValue":[32],"userName":[32],"isLoading":[32],"showForm":[32],"progress":[32],"validationError":[32],"showEditModal":[32],"pendingEditIndex":[32]}]]]], options);
+  return bootstrapLazy([["app-navbar",[[0,"app-navbar"]]],["insurance-chat",[[1,"insurance-chat",{"currentQuestion":[32],"answers":[32],"firstName":[32],"lastName":[32],"primaryValue":[32],"userName":[32],"isLoading":[32],"showForm":[32],"progress":[32],"validationError":[32],"showEditModal":[32],"pendingEditIndex":[32],"inputValues":[32]}]]]], options);
 });
 
 //# sourceMappingURL=lemonade.esm.js.map

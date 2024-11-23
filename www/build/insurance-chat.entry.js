@@ -3825,9 +3825,34 @@ const {
   mergeConfig
 } = axios;
 
+//old code
+// export const validateInput = (value: string, rules?: ValidationRule[]): string => {
+//   if (!rules) return '';
+//   for (const rule of rules) {
+//     if (rule.type === 'Required' && !value.trim()) {
+//       return rule.message;
+//     }
+//     if (rule.type === 'CustomRule' && rule.validate && !rule.validate(value)) {
+//       return rule.message;
+//     }
+//   }
+//   return '';
+// };
+//new code
 const validateInput = (value, rules) => {
     if (!rules)
         return '';
+    // Handle single rule object
+    if (!Array.isArray(rules)) {
+        if (rules.type === 'Required' && !value.trim()) {
+            return rules.message;
+        }
+        if (rules.type === 'CustomRule' && rules.validate && !rules.validate(value)) {
+            return rules.message;
+        }
+        return '';
+    }
+    // Handle array of rules
     for (const rule of rules) {
         if (rule.type === 'Required' && !value.trim()) {
             return rule.message;
@@ -3861,7 +3886,7 @@ const getMockBedrockResponse1 = async (sessionId, userName, inquiry, answersLeng
     try {
         const url1 = 'https://4nm82v58i4.execute-api.us-east-1.amazonaws.com/dev/chat';
         const url2 = 'http://localhost:7000/chat2';
-        const response = await axios.post(url2, {
+        const response = await axios.post(url1, {
             session_id: sessionId,
             message: `${inquiry}`,
         }, {
@@ -3959,7 +3984,7 @@ const EditMockBedrockResponse1 = async (sessionId, previousQuestion, previousAns
 };
 //
 
-const insuranceChatCss = ".app-wrapper{min-height:100vh;display:flex;flex-direction:column}.container{display:flex;justify-content:center;flex:1;background:#fff;padding:76px 20px 20px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;user-select:none;overflow:hidden}.chat-interface{width:100%;max-width:600px;margin:0;padding:20px;overflow-y:auto;max-height:calc(100vh - 96px);position:relative;scroll-behavior:smooth;display:flex;flex-direction:column-reverse;justify-content:flex-start;background:#fff;gap:16px}.chat-interface::-webkit-scrollbar{width:6px}.chat-interface::-webkit-scrollbar-track{background:transparent}.chat-interface::-webkit-scrollbar-thumb{background:#fff;border-radius:3px}.previous-page{display:flex;flex-direction:column;gap:16px;padding-bottom:32px;margin-bottom:32px;border-bottom:1px solid #e0e0e0;opacity:0.7;transition:opacity 0.3s ease}.previous-page:hover{opacity:1}.current-page{display:flex;flex-direction:column;gap:16px;padding-top:16px;position:relative;background:#fff}.current-page::before{content:'';position:absolute;top:-20px;left:0;right:0;height:20px;background:linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);pointer-events:none}@keyframes slideUp{from{transform:translateY(20px)}to{transform:translateY(0)}}.previous-answer{display:flex;flex-direction:column;flex:0 0 auto;}.previous-answer{text-align:left;padding:0;position:relative;min-height:60px;background:#fff;animation:slideUp 0.3s ease-out forwards;opacity:1;transition:opacity 0.3s ease, transform 0.3s ease, height 0.3s ease, margin 0.3s ease}.previous-answer.hidden{opacity:0;transform:translateY(-20px);height:0;margin:0;padding:0;overflow:hidden;pointer-events:none}.current-question{opacity:1;transform:translateY(0);transition:opacity 0.3s ease, transform 0.3s ease}.current-question{display:flex;gap:12px;min-height:60px;max-width:500px;position:relative;opacity:0;animation:fadeInStatic 0.3s ease-out forwards;background:#fff;padding-bottom:calc(100vh - 40%);margin-top:10px}.answer-header{font-size:16px;margin-bottom:8px;color:#949494;font-weight:600}.answer-content{font-size:15px;color:#4a4a4a;font-weight:600;line-height:1.5;display:flex;justify-content:space-between;align-items:center;gap:20px}.edit-button{background:transparent;color:#666;min-width:auto;padding:4px;font-size:12px;width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;position:absolute;right:-24px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:0;transition:opacity 0.2s ease}.previous-answer:hover .edit-button{opacity:1}.edit-button:hover:not(:disabled){background:#f0f0f0}.edit-button::before{content:'';display:block;width:16px;height:16px;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'%3E%3C/path%3E%3C/svg%3E\");background-size:contain;background-repeat:no-repeat}.edit-input{flex:1;min-width:160px;padding:4px 8px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px}.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0, 0, 0, 0.5);display:flex;justify-content:center;align-items:center;z-index:1000;animation:fadeIn 0.2s ease-out}.modal-dialog{background:white;border-radius:12px;padding:24px;width:90%;max-width:400px;box-shadow:0 4px 20px rgba(0, 0, 0, 0.15);animation:slideIn 0.3s ease-out}.modal-header{font-size:18px;font-weight:500;color:#2d2d2d;margin-bottom:16px;text-align:center}.modal-content{font-size:14px;color:#666;margin-bottom:24px;text-align:center;line-height:1.5}.modal-buttons{display:flex;gap:12px;justify-content:center}.modal-button{flex:1;max-width:120px;height:40px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s ease}.modal-button.primary{background:#c20029;color:white;border:none}.modal-button.secondary{background:transparent;color:#2d2d2d;border:1px solid #e0e0e0}.modal-button:hover{opacity:0.9}@keyframes slideIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeInStatic{0%{opacity:0}100%{opacity:1}}.avatar{width:35px;height:35px;border-radius:50%;overflow:hidden;flex-shrink:0}.avatar img{width:100%;height:100%;object-fit:cover}.question-content{flex:1;background:#fff}.question-text{font-size:16px;color:#666;margin-bottom:16px;line-height:1.5;font-weight:400;min-height:20px}.typed-cursor{display:none}.question-form{opacity:0;transform:translateY(10px);transition:all 0.3s ease;pointer-events:none;background:#fff}.question-form.visible{opacity:1;transform:translateY(0);pointer-events:all}.input-group{display:flex;gap:8px;margin-bottom:12px;max-width:400px}.input-wrapper{flex:1;display:flex;flex-direction:column;gap:4px}input,select{border:1px solid #e0e0e0;border-radius:6px;font-size:14px;color:#2d2d2d;background:#fff;transition:all 0.2s ease;height:36px;padding:0 12px;cursor:text;appearance:none;-webkit-appearance:none}input[type='text']{width:180px}input[type='date']{width:140px;padding-right:32px;color:#96151d}input[type='date']::-webkit-calendar-picker-indicator{background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2396151D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E\");background-size:16px;cursor:pointer;filter:opacity(0.8)}input[type='date']::-webkit-datetime-edit{color:#96151d}input[type='date']::-webkit-datetime-edit-fields-wrapper{color:#96151d}input[type='date']::-webkit-datetime-edit-text{color:#96151d;padding:0 2px}input[type='date']::-webkit-datetime-edit-month-field,input[type='date']::-webkit-datetime-edit-day-field,input[type='date']::-webkit-datetime-edit-year-field{color:#96151d}input[type='date']::-webkit-inner-spin-button{display:none}select{width:100%;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 8px center;background-size:16px;padding-right:32px;cursor:pointer}.radio-group{display:flex;gap:12px;flex-wrap:wrap}.radio-label{position:relative;flex:0 1 auto;}.radio-label input[type='radio']{position:absolute;opacity:0;width:0;height:0}.radio-label span{display:inline-block;padding:0 16px;font-size:14px;color:#2d2d2d;background:#fff;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;transition:all 0.2s ease;height:36px;line-height:36px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;}.radio-label input[type='radio']:checked+span{background:#96151d;color:#fff;border-color:#96151d}.radio-label:hover span{border-color:#96151d}input::placeholder,select::placeholder{color:#999}input:focus,select:focus{outline:none;border-color:#96151d;box-shadow:0 0 0 1px rgba(150, 21, 29, 0.1)}.validation-error{color:#dc3545;font-size:12px;margin-top:4px;animation:fadeIn 0.3s ease-out}button{display:inline-flex;align-items:center;justify-content:center;min-width:100px;padding:12px 32px;background-color:#c20029;color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s ease;height:48px}button:hover:not(:disabled){background-color:#a30022}button:disabled{background-color:#f5f5f5;color:#999;cursor:not-allowed}.progress-bar{margin-top:20px;height:2px;background-color:#f0f0f0;border-radius:1px;overflow:hidden}.progress{height:100%;background-color:#96151d;transition:width 0.3s ease-in-out}input[type='number']::-webkit-inner-spin-button,input[type='number']::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}input[type='number']{-moz-appearance:textfield}@media (max-width: 480px){.chat-interface{padding:16px}.input-group{flex-direction:column}.question-text{font-size:15px}.answer-header{font-size:15px}button{width:100%}.modal-dialog{width:calc(100% - 32px);padding:20px}.radio-group{width:100%;justify-content:space-between}.radio-label span{width:100%;text-align:center}}";
+const insuranceChatCss = ".app-wrapper{min-height:100vh;display:flex;flex-direction:column}.container{display:flex;justify-content:center;flex:1;background:#fff;padding:76px 20px 20px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;user-select:none;overflow:hidden}.chat-interface{width:100%;max-width:600px;margin:0;padding:20px;overflow-y:auto;max-height:calc(100vh - 96px);position:relative;scroll-behavior:smooth;display:flex;flex-direction:column-reverse;justify-content:flex-start;background:#fff;gap:16px}.typing-indicator{display:flex;align-items:center;gap:4px;padding:10px 0}.typing-indicator span{width:8px;height:8px;background-color:#666;border-radius:50%;animation:bounce 1.4s infinite ease-in-out}.typing-indicator span:nth-child(1){animation-delay:-0.32s}.typing-indicator span:nth-child(2){animation-delay:-0.16s}.typing-indicator span:nth-child(3){animation-delay:0s}@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-8px)}}.form-container{display:flex;flex-direction:column;gap:10px;width:100%}.form-container.address{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px}.form-container.address .input-wrapper:first-child{grid-column:1 / -1}.form-container.security-questions{display:flex;flex-direction:column;gap:20px}.form-container.security-questions .question-pair-0,.form-container.security-questions .question-pair-1,.form-container.security-questions .question-pair-2{display:flex;flex-direction:column;gap:10px}.form-container.default{display:flex;flex-direction:column;gap:10px}.chat-interface::-webkit-scrollbar{width:6px}.chat-interface::-webkit-scrollbar-track{background:transparent}.chat-interface::-webkit-scrollbar-thumb{background:#fff;border-radius:3px}.previous-page{display:flex;flex-direction:column;gap:16px;padding-bottom:32px;margin-bottom:32px;border-bottom:1px solid #e0e0e0;opacity:0.7;transition:opacity 0.3s ease}.previous-page:hover{opacity:1}.current-page{display:flex;flex-direction:column;gap:16px;padding-top:16px;position:relative;background:#fff}.current-page::before{content:'';position:absolute;top:-20px;left:0;right:0;height:20px;background:linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);pointer-events:none}@keyframes slideUp{from{transform:translateY(20px)}to{transform:translateY(0)}}.previous-answer{display:flex;flex-direction:column;flex:0 0 auto;}.previous-answer{text-align:left;padding:0;position:relative;min-height:60px;background:#fff;animation:slideUp 0.3s ease-out forwards;opacity:1;transition:opacity 0.3s ease, transform 0.3s ease, height 0.3s ease, margin 0.3s ease}.previous-answer.hidden{opacity:0;transform:translateY(-20px);height:0;margin:0;padding:0;overflow:hidden;pointer-events:none}.current-question{opacity:1;transform:translateY(0);transition:opacity 0.3s ease, transform 0.3s ease}.current-question{display:flex;gap:12px;min-height:60px;max-width:500px;position:relative;opacity:0;animation:fadeInStatic 0.3s ease-out forwards;background:#fff;padding-bottom:calc(100vh - 40%);margin-top:10px}.answer-header{font-size:16px;margin-bottom:8px;color:#949494;font-weight:600}.answer-content{font-size:15px;color:#4a4a4a;font-weight:600;line-height:1.5;display:flex;justify-content:space-between;align-items:center;gap:20px}.edit-button{background:transparent;color:#666;min-width:auto;padding:4px;font-size:12px;width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;position:absolute;right:-24px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:0;transition:opacity 0.2s ease}.previous-answer:hover .edit-button{opacity:1}.edit-button:hover:not(:disabled){background:#f0f0f0}.edit-button::before{content:'';display:block;width:16px;height:16px;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'%3E%3C/path%3E%3C/svg%3E\");background-size:contain;background-repeat:no-repeat}.edit-input{flex:1;min-width:160px;padding:4px 8px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px}.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0, 0, 0, 0.5);display:flex;justify-content:center;align-items:center;z-index:1000;animation:fadeIn 0.2s ease-out}.modal-dialog{background:white;border-radius:12px;padding:24px;width:90%;max-width:400px;box-shadow:0 4px 20px rgba(0, 0, 0, 0.15);animation:slideIn 0.3s ease-out}.modal-header{font-size:18px;font-weight:500;color:#2d2d2d;margin-bottom:16px;text-align:center}.modal-content{font-size:14px;color:#666;margin-bottom:24px;text-align:center;line-height:1.5}.modal-buttons{display:flex;gap:12px;justify-content:center}.modal-button{flex:1;max-width:120px;height:40px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s ease}.modal-button.primary{background:#c20029;color:white;border:none}.modal-button.secondary{background:transparent;color:#2d2d2d;border:1px solid #e0e0e0}.modal-button:hover{opacity:0.9}@keyframes slideIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeInStatic{0%{opacity:0}100%{opacity:1}}.avatar{width:35px;height:35px;border-radius:50%;overflow:hidden;flex-shrink:0}.avatar img{width:100%;height:100%;object-fit:cover}.question-content{flex:1;background:#fff}.question-text{font-size:16px;color:#666;margin-bottom:16px;line-height:1.5;font-weight:400;min-height:20px}.typed-cursor{display:none}.question-form{opacity:0;transform:translateY(10px);transition:all 0.3s ease;pointer-events:none;background:#fff}.question-form.visible{opacity:1;transform:translateY(0);pointer-events:all}.input-group{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;max-width:400px}.input-groupName{display:flex;gap:8px;margin-bottom:12px;max-width:400px}.input-wrapper{flex:1;display:flex;gap:4px}input,select{border:1px solid #e0e0e0;border-radius:6px;font-size:14px;color:#2d2d2d;background:#fff;transition:all 0.2s ease;height:36px;padding:0 12px;cursor:text;appearance:none;-webkit-appearance:none}input[type='text']{width:180px}input[type='date']{width:140px;padding-right:32px;color:#96151d}input[type='date']::-webkit-calendar-picker-indicator{background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2396151D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E\");background-size:16px;cursor:pointer;filter:opacity(0.8)}input[type='date']::-webkit-datetime-edit{color:#96151d}input[type='date']::-webkit-datetime-edit-fields-wrapper{color:#96151d}input[type='date']::-webkit-datetime-edit-text{color:#96151d;padding:0 2px}input[type='date']::-webkit-datetime-edit-month-field,input[type='date']::-webkit-datetime-edit-day-field,input[type='date']::-webkit-datetime-edit-year-field{color:#96151d}input[type='date']::-webkit-inner-spin-button{display:none}select{width:100%;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 8px center;background-size:16px;padding-right:32px;cursor:pointer}.radio-group{display:flex;gap:12px;flex-wrap:wrap}.radio-label{position:relative;flex:0 1 auto;}.radio-label input[type='radio']{position:absolute;opacity:0;width:0;height:0}.radio-label span{display:inline-block;padding:0 16px;font-size:14px;color:#2d2d2d;background:#fff;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;transition:all 0.2s ease;height:36px;line-height:36px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;}.radio-label input[type='radio']:checked+span{background:#96151d;color:#fff;border-color:#96151d}.radio-label:hover span{border-color:#96151d}input::placeholder,select::placeholder{color:#999}input:focus,select:focus{outline:none;border-color:#96151d;box-shadow:0 0 0 1px rgba(150, 21, 29, 0.1)}.validation-error{color:#dc3545;font-size:12px;margin-top:4px;animation:fadeIn 0.3s ease-out}button{display:inline-flex;align-items:center;justify-content:center;min-width:100px;padding:12px 32px;background-color:#c20029;color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s ease;height:48px}button:hover:not(:disabled){background-color:#a30022}button:disabled{background-color:#f5f5f5;color:#999;cursor:not-allowed}.progress-bar{margin-top:20px;height:2px;background-color:#f0f0f0;border-radius:1px;overflow:hidden}.progress{height:100%;background-color:#96151d;transition:width 0.3s ease-in-out}input[type='number']::-webkit-inner-spin-button,input[type='number']::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}input[type='number']{-moz-appearance:textfield}@media (max-width: 480px){.chat-interface{padding:16px}.input-group{flex-direction:column}.question-text{font-size:15px}.answer-header{font-size:15px}button{width:100%}.modal-dialog{width:calc(100% - 32px);padding:20px}.radio-group{width:100%;justify-content:space-between}.radio-label span{width:100%;text-align:center}}";
 
 const InsuranceChat = class {
     constructor(hostRef) {
@@ -3977,9 +4002,16 @@ const InsuranceChat = class {
             this.lastName = input.value;
             this.validationError = '';
         };
-        this.handleInput = (e) => {
+        // private handleInput = (e: Event) => {
+        //   const input = e.target as HTMLInputElement | HTMLSelectElement;
+        //   this.primaryValue = input.value;
+        //   this.validationError = '';
+        // };
+        //handling multiple form inputs
+        this.handleInput = (e, index) => {
             const input = e.target;
-            this.primaryValue = input.value;
+            this.inputValues = Object.assign(Object.assign({}, this.inputValues), { [`component-${index}`]: input.value });
+            // console.log('Input Values:', this.inputValues); // Debug log
             this.validationError = '';
         };
         this.currentQuestion = undefined;
@@ -3994,6 +4026,7 @@ const InsuranceChat = class {
         this.validationError = '';
         this.showEditModal = false;
         this.pendingEditIndex = -1;
+        this.inputValues = {};
     }
     updateScroll() {
         const chatInterface = this.chatInterface;
@@ -4196,19 +4229,48 @@ const InsuranceChat = class {
             this.isLoading = false; // Ensure loading is reset in finally block
         }
     }
+    //typing edit for handle submit
     async handleSubmit(e) {
-        var _a;
+        var _a, _b, _c;
         e.preventDefault();
         if (!this.userName && (!this.firstName.trim() || !this.lastName.trim())) {
             this.validationError = 'Please enter both first and last name';
             return;
         }
-        if (this.userName && !this.primaryValue.trim())
-            return;
-        const validationError = this.userName ? validateInput(this.primaryValue, (_a = this.currentQuestion.component) === null || _a === void 0 ? void 0 : _a.validationRules) : '';
-        if (validationError) {
-            this.validationError = validationError;
-            return;
+        // For non-name inputs, check if we have a value
+        if (this.userName) {
+            // For single component
+            if (!Array.isArray(this.currentQuestion.component)) {
+                if (!((_a = this.inputValues['component-0']) === null || _a === void 0 ? void 0 : _a.trim())) {
+                    this.validationError = 'This field is required';
+                    return;
+                }
+            }
+            // For multiple components
+            else {
+                const hasEmptyInputs = this.currentQuestion.component.some((_, index) => { var _a; return !((_a = this.inputValues[`component-${index}`]) === null || _a === void 0 ? void 0 : _a.trim()); });
+                if (hasEmptyInputs) {
+                    this.validationError = 'All fields are required';
+                    return;
+                }
+            }
+            // Validate all components if there are multiple
+            if (Array.isArray(this.currentQuestion.component)) {
+                for (let i = 0; i < this.currentQuestion.component.length; i++) {
+                    const validationError = validateInput(this.inputValues[`component-${i}`], this.currentQuestion.component[i].validationRules);
+                    if (validationError) {
+                        this.validationError = validationError;
+                        return;
+                    }
+                }
+            }
+            else {
+                const validationError = validateInput(this.inputValues['component-0'], (_b = this.currentQuestion.component) === null || _b === void 0 ? void 0 : _b.validationRules);
+                if (validationError) {
+                    this.validationError = validationError;
+                    return;
+                }
+            }
         }
         this.validationError = '';
         this.isLoading = true;
@@ -4219,10 +4281,9 @@ const InsuranceChat = class {
                 const nameAnswer = {
                     question: this.currentQuestion.text,
                     answer: this.userName,
-                    type: this.currentQuestion.component.type,
+                    type: Array.isArray(this.currentQuestion.component) ? this.currentQuestion.component[0].type : this.currentQuestion.component.type,
                 };
                 this.answers = [nameAnswer];
-                // Observe the new answer after a short delay to ensure it's in the DOM
                 setTimeout(() => {
                     const newAnswer = this.el.shadowRoot.querySelector('.previous-answer:last-child');
                     if (newAnswer && this.observer) {
@@ -4231,9 +4292,6 @@ const InsuranceChat = class {
                 }, 0);
                 this.firstName = '';
                 this.lastName = '';
-                this.isLoading = false;
-                await new Promise(resolve => setTimeout(resolve, 100));
-                /* First Call to Bedrock API - for getting initial response */
                 try {
                     const response = await getMockBedrockResponse1(this.sessionId, ' ', `Hi I am ${this.userName}`, 1);
                     this.progress = response.progress;
@@ -4241,8 +4299,8 @@ const InsuranceChat = class {
                         text: response.text,
                         component: response.component,
                     };
-                    await this.initializeTyping(response.text);
                     this.isLoading = false;
+                    await this.initializeTyping(response.text);
                 }
                 catch (error) {
                     console.error('Error getting response:', error);
@@ -4250,74 +4308,302 @@ const InsuranceChat = class {
                 }
                 return;
             }
+            // Format multiple component answers as comma-separated string
+            const formattedAnswer = Array.isArray(this.currentQuestion.component)
+                ? this.currentQuestion.component.map((_, index) => this.inputValues[`component-${index}`]).join(', ')
+                : this.inputValues['component-0'];
             const answer = {
                 question: this.currentQuestion.text,
-                answer: this.primaryValue,
-                type: this.currentQuestion.component.type,
+                answer: formattedAnswer,
+                type: Array.isArray(this.currentQuestion.component)
+                    ? ((_c = this.currentQuestion.component.find(comp => comp.type === 'Password')) === null || _c === void 0 ? void 0 : _c.type) || this.currentQuestion.component[0].type
+                    : this.currentQuestion.component.type,
             };
             this.answers = [...this.answers, answer];
-            // Observe the new answer after a short delay to ensure it's in the DOM
             setTimeout(() => {
                 const newAnswer = this.el.shadowRoot.querySelector('.previous-answer:last-child');
                 if (newAnswer && this.observer) {
                     this.observer.observe(newAnswer);
                 }
             }, 0);
-            if (this.answers.length <= 6) {
-                //entry into the first call to bedrock response
-                // console.log('hit agian' + this.answers.length);
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                const mockResponse = await getMockBedrockResponse1(this.sessionId, this.userName, this.primaryValue, this.answers.length);
-                this.progress = mockResponse.progress;
-                this.currentQuestion = {
-                    text: mockResponse.text,
-                    component: mockResponse.component,
-                };
-                await this.initializeTyping(mockResponse.text);
-            }
-            else {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                const finalText = `Thank you ${this.userName}! We'll process your information and get back to you shortly.`;
-                this.currentQuestion = {
-                    text: finalText,
-                };
-                this.progress = 100;
-                await this.initializeTyping(finalText);
-            }
-            this.primaryValue = '';
+            const response = await getMockBedrockResponse1(this.sessionId, this.userName, formattedAnswer, this.answers.length);
+            this.progress = response.progress;
+            this.currentQuestion = {
+                text: response.text,
+                component: response.component,
+            };
+            this.isLoading = false;
+            await this.initializeTyping(response.text);
+            // Clear all input values after submission
+            this.inputValues = {};
         }
         catch (error) {
             console.error('Error processing answer:', error);
         }
         finally {
             this.isLoading = false;
-            // this.chatInterface.scrollTop = this.chatInterface.scrollHeight;
         }
     }
+    //new code for handle submit
+    // private async handleSubmit(e: Event) {
+    //   e.preventDefault();
+    //   if (!this.userName && (!this.firstName.trim() || !this.lastName.trim())) {
+    //     this.validationError = 'Please enter both first and last name';
+    //     return;
+    //   }
+    //   // For non-name inputs, check if we have a value
+    //   if (this.userName) {
+    //     // For single component
+    //     if (!Array.isArray(this.currentQuestion.component)) {
+    //       if (!this.inputValues['component-0']?.trim()) {
+    //         this.validationError = 'This field is required';
+    //         return;
+    //       }
+    //     }
+    //     // For multiple components
+    //     else {
+    //       const hasEmptyInputs = this.currentQuestion.component.some((_, index) => !this.inputValues[`component-${index}`]?.trim());
+    //       if (hasEmptyInputs) {
+    //         this.validationError = 'All fields are required';
+    //         return;
+    //       }
+    //     }
+    //   }
+    //   const validationError = this.userName
+    //     ? validateInput(
+    //         this.inputValues['component-0'],
+    //         Array.isArray(this.currentQuestion.component) ? this.currentQuestion.component[0].validationRules : this.currentQuestion.component?.validationRules,
+    //       )
+    //     : '';
+    //   if (validationError) {
+    //     this.validationError = validationError;
+    //     return;
+    //   }
+    //   this.validationError = '';
+    //   this.isLoading = true;
+    //   this.showForm = false;
+    //   try {
+    //     if (!this.userName) {
+    //       this.userName = `${this.firstName} ${this.lastName}`;
+    //       const nameAnswer = {
+    //         question: this.currentQuestion.text,
+    //         answer: this.userName,
+    //         type: Array.isArray(this.currentQuestion.component) ? this.currentQuestion.component[0].type : this.currentQuestion.component.type,
+    //       };
+    //       this.answers = [nameAnswer];
+    //       setTimeout(() => {
+    //         const newAnswer = this.el.shadowRoot.querySelector('.previous-answer:last-child');
+    //         if (newAnswer && this.observer) {
+    //           this.observer.observe(newAnswer);
+    //         }
+    //       }, 0);
+    //       this.firstName = '';
+    //       this.lastName = '';
+    //       this.isLoading = false;
+    //       await new Promise(resolve => setTimeout(resolve, 100));
+    //       try {
+    //         const response = await getMockBedrockResponse1(this.sessionId, ' ', `Hi I am ${this.userName}`, 1);
+    //         this.progress = response.progress;
+    //         this.currentQuestion = {
+    //           text: response.text,
+    //           component: response.component,
+    //         };
+    //         await this.initializeTyping(response.text);
+    //         this.isLoading = false;
+    //       } catch (error) {
+    //         console.error('Error getting response:', error);
+    //         this.isLoading = false;
+    //       }
+    //       return;
+    //     }
+    //     // Format multiple component answers as comma-separated string
+    //     const formattedAnswer = Array.isArray(this.currentQuestion.component)
+    //       ? this.currentQuestion.component.map((_, index) => this.inputValues[`component-${index}`]).join(', ')
+    //       : this.inputValues['component-0'];
+    //     const answer = {
+    //       question: this.currentQuestion.text,
+    //       answer: formattedAnswer,
+    //       type: Array.isArray(this.currentQuestion.component)
+    //         ? this.currentQuestion.component.find(comp => comp.type === 'Password')?.type || this.currentQuestion.component[0].type
+    //         : this.currentQuestion.component.type,
+    //     };
+    //     //old code
+    //     // Format multiple component answers as comma-separated string
+    //     // const formattedAnswer = Array.isArray(this.currentQuestion.component)
+    //     //   ? this.currentQuestion.component.map((_, index) => this.inputValues[`component-${index}`]).join(', ')
+    //     //   : this.inputValues['component-0'];
+    //     // const answer = {
+    //     //   question: this.currentQuestion.text,
+    //     //   answer: formattedAnswer,
+    //     //   type: Array.isArray(this.currentQuestion.component) ? this.currentQuestion.component[0].type : this.currentQuestion.component.type,
+    //     // };
+    //     this.answers = [...this.answers, answer];
+    //     setTimeout(() => {
+    //       const newAnswer = this.el.shadowRoot.querySelector('.previous-answer:last-child');
+    //       if (newAnswer && this.observer) {
+    //         this.observer.observe(newAnswer);
+    //       }
+    //     }, 0);
+    //     await new Promise(resolve => setTimeout(resolve, 1000));
+    //     const response = await getMockBedrockResponse1(this.sessionId, this.userName, formattedAnswer, this.answers.length);
+    //     this.progress = response.progress;
+    //     this.currentQuestion = {
+    //       text: response.text,
+    //       component: response.component,
+    //     };
+    //     await this.initializeTyping(response.text);
+    //     // Clear all input values after submission
+    //     this.inputValues = {};
+    //   } catch (error) {
+    //     console.error('Error processing answer:', error);
+    //   } finally {
+    //     this.isLoading = false;
+    //   }
+    // }
+    // old code for handle submit
+    // private async handleSubmit(e: Event) {
+    //   e.preventDefault();
+    //   if (!this.userName && (!this.firstName.trim() || !this.lastName.trim())) {
+    //     this.validationError = 'Please enter both first and last name';
+    //     return;
+    //   }
+    //   if (this.userName && !this.primaryValue.trim()) return;
+    //   // if (this.userName && !this.primaryValue.trim()) {
+    //   //   const component = Array.isArray(this.currentQuestion.component)
+    //   //     ? this.currentQuestion.component[0]
+    //   //     : this.currentQuestion.component;
+    //   //   if (component?.validationRules?.type === 'Required') {
+    //   //     this.validationError = component.validationRules.message;
+    //   //     return;
+    //   //   }
+    //   // }
+    //   const validationError = this.userName ? validateInput(this.primaryValue, this.currentQuestion.component?.validationRules) : '';
+    //   if (validationError) {
+    //     this.validationError = validationError;
+    //     return;
+    //   }
+    //   this.validationError = '';
+    //   this.isLoading = true;
+    //   this.showForm = false;
+    //   try {
+    //     if (!this.userName) {
+    //       this.userName = `${this.firstName} ${this.lastName}`;
+    //       const nameAnswer = {
+    //         question: this.currentQuestion.text,
+    //         answer: this.userName,
+    //         type: this.currentQuestion.component.type,
+    //       };
+    //       this.answers = [nameAnswer];
+    //       // Observe the new answer after a short delay to ensure it's in the DOM
+    //       setTimeout(() => {
+    //         const newAnswer = this.el.shadowRoot.querySelector('.previous-answer:last-child');
+    //         if (newAnswer && this.observer) {
+    //           this.observer.observe(newAnswer);
+    //         }
+    //       }, 0);
+    //       this.firstName = '';
+    //       this.lastName = '';
+    //       this.isLoading = false;
+    //       await new Promise(resolve => setTimeout(resolve, 100));
+    //       /* First Call to Bedrock API - for getting initial response */
+    //       try {
+    //         const response = await getMockBedrockResponse1(this.sessionId, ' ', `Hi I am ${this.userName}`, 1);
+    //         this.progress = response.progress;
+    //         this.currentQuestion = {
+    //           text: response.text,
+    //           component: response.component,
+    //         };
+    //         await this.initializeTyping(response.text);
+    //         this.isLoading = false;
+    //       } catch (error) {
+    //         console.error('Error getting response:', error);
+    //         this.isLoading = false;
+    //       }
+    //       return;
+    //     }
+    //     const answer = {
+    //       question: this.currentQuestion.text,
+    //       answer: this.primaryValue,
+    //       type: this.currentQuestion.component.type,
+    //     };
+    //     this.answers = [...this.answers, answer];
+    //     // Observe the new answer after a short delay to ensure it's in the DOM
+    //     setTimeout(() => {
+    //       const newAnswer = this.el.shadowRoot.querySelector('.previous-answer:last-child');
+    //       if (newAnswer && this.observer) {
+    //         this.observer.observe(newAnswer);
+    //       }
+    //     }, 0);
+    //     if (this.answers.length <= 6) {
+    //       //entry into the first call to bedrock response
+    //       // console.log('hit agian' + this.answers.length);
+    //       await new Promise(resolve => setTimeout(resolve, 1000));
+    //       const mockResponse = await getMockBedrockResponse1(this.sessionId, this.userName, this.primaryValue, this.answers.length);
+    //       this.progress = mockResponse.progress;
+    //       this.currentQuestion = {
+    //         text: mockResponse.text,
+    //         component: mockResponse.component,
+    //       };
+    //       await this.initializeTyping(mockResponse.text);
+    //     } else {
+    //       await new Promise(resolve => setTimeout(resolve, 1000));
+    //       const finalText = `Thank you ${this.userName}! We'll process your information and get back to you shortly.`;
+    //       this.currentQuestion = {
+    //         text: finalText,
+    //       };
+    //       this.progress = 100;
+    //       await this.initializeTyping(finalText);
+    //     }
+    //     this.primaryValue = '';
+    //   } catch (error) {
+    //     console.error('Error processing answer:', error);
+    //   } finally {
+    //     this.isLoading = false;
+    //     // this.chatInterface.scrollTop = this.chatInterface.scrollHeight;
+    //   }
+    // }
+    getComponentPattern() {
+        const components = this.currentQuestion.component;
+        if (!Array.isArray(components))
+            return 'default';
+        // Check for address pattern (4 TextBoxes)
+        if (components.length === 4 && components.every(c => c.type === 'TextBox') && components.some(c => c.label.toLowerCase().includes('street'))) {
+            return 'address';
+        }
+        // Check for security questions pattern (pairs of Select/Dropdown and TextBox)
+        if (components.length % 2 === 0 && components.every((c, i) => (i % 2 === 0 ? c.type === 'Select' || c.type === 'DropDown' : c.type === 'TextBox'))) {
+            return 'security-questions';
+        }
+        return 'default';
+    }
+    //for adjusting css
     renderFormComponent() {
         if (!Array.isArray(this.currentQuestion.component) || this.currentQuestion.component.length === 0)
             return null;
-        return this.currentQuestion.component.map((component, index) => {
+        const pattern = this.getComponentPattern();
+        const containerClass = `form-container ${pattern}`;
+        return (h("div", { class: containerClass }, this.currentQuestion.component.map((component, index) => {
             var _a, _b;
+            const wrapperClass = pattern === 'security-questions' ? `input-wrapper question-pair-${Math.floor(index / 2)}` : 'input-wrapper';
             switch (component.type) {
                 case 'TextBox':
-                    return (h("div", { class: "input-wrapper", key: `textbox-${index}` }, h("input", { type: "text", placeholder: component.format || component.label, value: this.primaryValue, onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true })));
+                    return (h("div", { class: wrapperClass, key: `textbox-${index}` }, h("input", { type: "text", placeholder: component.format || component.label, value: this.inputValues[`component-${index}`] || '', onInput: e => this.handleInput(e, index), ref: el => (this.primaryInput = el), required: true })));
                 case 'DropDown':
                 case 'Select':
-                    return (h("div", { class: "input-wrapper", key: `select-${index}` }, h("select", { onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true }, h("option", { value: "" }, "Select ", component.label), (_a = component.options) === null || _a === void 0 ? void 0 :
-                        _a.map(option => (h("option", { value: option, selected: this.primaryValue === option }, option))))));
+                    return (h("div", { class: wrapperClass, key: `select-${index}` }, h("select", { onInput: e => this.handleInput(e, index), ref: el => (this.primaryInput = el), required: true }, h("option", { value: "" }, "Select ", component.label), (_a = component.options) === null || _a === void 0 ? void 0 :
+                        _a.map(option => (h("option", { value: option, selected: this.inputValues[`component-${index}`] === option }, option))))));
                 case 'RadioButton':
                 case 'Radio':
-                    return (h("div", { class: "radio-group", key: `radio-${index}` }, (_b = component.options) === null || _b === void 0 ? void 0 : _b.map(option => (h("label", { class: "radio-label", key: `${option}-${index}` }, h("input", { type: "radio", name: `radio-option-${index}`, value: option, checked: this.primaryValue === option, onInput: this.handleInput }), h("span", null, option))))));
+                    return (h("div", { class: `${wrapperClass} radio-group`, key: `radio-${index}` }, (_b = component.options) === null || _b === void 0 ? void 0 : _b.map(option => (h("label", { class: "radio-label", key: `${option}-${index}` }, h("input", { type: "radio", name: `radio-option-${index}`, value: option, checked: this.inputValues[`component-${index}`] === option, onInput: e => this.handleInput(e, index) }), h("span", null, option))))));
                 case 'DatePicker':
                     const twentyYearsAgo = new Date();
                     twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
                     const max = twentyYearsAgo.toISOString().split('T')[0];
-                    return (h("div", { class: "input-wrapper", key: `date-picker-${index}` }, h("input", { type: "date", max: max, value: this.primaryValue, onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true })));
+                    return (h("div", { class: wrapperClass, key: `date-picker-${index}` }, h("input", { type: "date", max: max, value: this.inputValues[`component-${index}`] || '', onInput: e => this.handleInput(e, index), ref: el => (this.primaryInput = el), required: true })));
                 case 'Email':
-                    return (h("div", { class: "input-wrapper", key: `email-${index}` }, h("input", { type: "email", placeholder: component.label || 'Enter email address', value: this.primaryValue, onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true, pattern: "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$", title: "Please enter a valid email address" })));
+                    return (h("div", { class: wrapperClass, key: `email-${index}` }, h("input", { type: "email", placeholder: component.label || 'Enter email address', value: this.inputValues[`component-${index}`] || '', onInput: e => this.handleInput(e, index), ref: el => (this.primaryInput = el), required: true, pattern: "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$", title: "Please enter a valid email address" })));
                 case 'Password':
-                    return (h("div", { class: "input-wrapper", key: `password-${index}` }, h("input", { type: "password", placeholder: component.label || 'Enter Password', value: this.primaryValue, onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true, minLength: 8, pattern: "(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,}", title: "Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number." })));
+                    return (h("div", { class: wrapperClass, key: `password-${index}` }, h("input", { type: "password", placeholder: component.label || 'Enter Password', value: this.inputValues[`component-${index}`] || '', onInput: e => this.handleInput(e, index), ref: el => (this.primaryInput = el), required: true, minLength: 8, pattern: "(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,}", title: "Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number." })));
                 case 'SSN':
                     const formatSSN = event => {
                         let value = event.target.value.replace(/\D/g, '');
@@ -4328,15 +4614,149 @@ const InsuranceChat = class {
                             value = value.replace(/^(\d{3})(\d{2})(\d{0,4})/, '$1-$2-$3');
                         }
                         event.target.value = value;
-                        this.primaryValue = value;
-                        this.handleInput(event);
+                        this.inputValues[`component-${index}`] = value;
+                        this.handleInput(event, index);
                     };
-                    return (h("div", { class: "input-wrapper", key: `ssn-${index}` }, h("input", { type: "text", placeholder: component.label || 'Enter SSN', value: this.primaryValue, onInput: formatSSN, ref: el => (this.primaryInput = el), required: true, maxLength: 11, pattern: "\\d{3}-\\d{2}-\\d{4}", title: "SSN must be in the format ###-##-####" })));
+                    return (h("div", { class: wrapperClass, key: `ssn-${index}` }, h("input", { type: "text", placeholder: component.label || 'Enter SSN', value: this.inputValues[`component-${index}`] || '', onInput: formatSSN, ref: el => (this.primaryInput = el), required: true, maxLength: 11, pattern: "\\d{3}-\\d{2}-\\d{4}", title: "SSN must be in the format ###-##-####" })));
                 default:
                     return null;
             }
-        });
+        })));
     }
+    // working new multiple form inputs
+    // private renderFormComponent() {
+    //   if (!Array.isArray(this.currentQuestion.component) || this.currentQuestion.component.length === 0) return null;
+    //   const pattern = this.getComponentPattern();
+    //   const containerClass = `form-container ${pattern}`;
+    //   return this.currentQuestion.component.map((component, index) => {
+    //     switch (component.type) {
+    //       case 'TextBox':
+    //         return (
+    //           <div class="input-wrapper" key={`textbox-${index}`}>
+    //             <input
+    //               type="text"
+    //               placeholder={component.format || component.label}
+    //               value={this.inputValues[`component-${index}`] || ''}
+    //               onInput={e => {
+    //                 // console.log('Input event:', e); // Debug log
+    //                 this.handleInput(e, index);
+    //               }}
+    //               ref={el => (this.primaryInput = el)}
+    //               required
+    //             />
+    //           </div>
+    //         );
+    //       case 'DropDown':
+    //       case 'Select':
+    //         return (
+    //           <div class="input-wrapper" key={`select-${index}`}>
+    //             <select onInput={e => this.handleInput(e, index)} ref={el => (this.primaryInput = el)} required>
+    //               <option value="">Select {component.label}</option>
+    //               {component.options?.map(option => (
+    //                 <option value={option} selected={this.inputValues[`component-${index}`] === option}>
+    //                   {option}
+    //                 </option>
+    //               ))}
+    //             </select>
+    //           </div>
+    //         );
+    //       case 'RadioButton':
+    //       case 'Radio':
+    //         return (
+    //           <div class="radio-group" key={`radio-${index}`}>
+    //             {component.options?.map(option => (
+    //               <label class="radio-label" key={`${option}-${index}`}>
+    //                 <input
+    //                   type="radio"
+    //                   name={`radio-option-${index}`}
+    //                   value={option}
+    //                   checked={this.inputValues[`component-${index}`] === option}
+    //                   onInput={e => this.handleInput(e, index)}
+    //                 />
+    //                 <span>{option}</span>
+    //               </label>
+    //             ))}
+    //           </div>
+    //         );
+    //       case 'DatePicker':
+    //         const twentyYearsAgo = new Date();
+    //         twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
+    //         const max = twentyYearsAgo.toISOString().split('T')[0];
+    //         return (
+    //           <div class="input-wrapper" key={`date-picker-${index}`}>
+    //             <input
+    //               type="date"
+    //               max={max}
+    //               value={this.inputValues[`component-${index}`] || ''}
+    //               onInput={e => this.handleInput(e, index)}
+    //               ref={el => (this.primaryInput = el)}
+    //               required
+    //             />
+    //           </div>
+    //         );
+    //       case 'Email':
+    //         return (
+    //           <div class="input-wrapper" key={`email-${index}`}>
+    //             <input
+    //               type="email"
+    //               placeholder={component.label || 'Enter email address'}
+    //               value={this.inputValues[`component-${index}`] || ''}
+    //               onInput={e => this.handleInput(e, index)}
+    //               ref={el => (this.primaryInput = el)}
+    //               required
+    //               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+    //               title="Please enter a valid email address"
+    //             />
+    //           </div>
+    //         );
+    //       case 'Password':
+    //         return (
+    //           <div class="input-wrapper" key={`password-${index}`}>
+    //             <input
+    //               type="password"
+    //               placeholder={component.label || 'Enter Password'}
+    //               value={this.inputValues[`component-${index}`] || ''}
+    //               onInput={e => this.handleInput(e, index)}
+    //               ref={el => (this.primaryInput = el)}
+    //               required
+    //               minLength={8}
+    //               pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+    //               title="Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number."
+    //             />
+    //           </div>
+    //         );
+    //       case 'SSN':
+    //         const formatSSN = event => {
+    //           let value = event.target.value.replace(/\D/g, '');
+    //           if (value.length > 3 && value.length <= 5) {
+    //             value = value.replace(/^(\d{3})(\d{0,2})/, '$1-$2');
+    //           } else if (value.length > 5) {
+    //             value = value.replace(/^(\d{3})(\d{2})(\d{0,4})/, '$1-$2-$3');
+    //           }
+    //           event.target.value = value;
+    //           this.inputValues[`component-${index}`] = value;
+    //           this.handleInput(event, index);
+    //         };
+    //         return (
+    //           <div class="input-wrapper" key={`ssn-${index}`}>
+    //             <input
+    //               type="text"
+    //               placeholder={component.label || 'Enter SSN'}
+    //               value={this.inputValues[`component-${index}`] || ''}
+    //               onInput={formatSSN}
+    //               ref={el => (this.primaryInput = el)}
+    //               required
+    //               maxLength={11}
+    //               pattern="\d{3}-\d{2}-\d{4}"
+    //               title="SSN must be in the format ###-##-####"
+    //             />
+    //           </div>
+    //         );
+    //       default:
+    //         return null;
+    //     }
+    //   });
+    // }
     /** OLD CODE TO RENDER ONLY ONE ELEMENT */
     // private renderFormComponent() {
     //   if (!this.currentQuestion.component) return null;
@@ -4463,22 +4883,46 @@ const InsuranceChat = class {
             return '';
         return '*'.repeat(password.length); // Replace each character with '*'
     }
-    /*This will reverse the previous ans*/
     renderPreviousAnswers() {
-        // Create a copy of answers array and reverse it
         const reversedAnswers = [...this.answers].reverse();
         return reversedAnswers.map((answer, index) => {
-            // Calculate the original index for edit functionality
             const originalIndex = this.answers.length - 1 - index;
-            return (h("div", { class: "previous-answer", key: originalIndex }, h("div", { class: "answer-header" }, answer.question), h("div", { class: "answer-content" }, h("span", null, /\bpassword\b/i.test(answer.type)
+            const isPassword = answer.type === 'Password'; // Direct type check
+            return (h("div", { class: "previous-answer", key: originalIndex }, h("div", { class: "answer-header" }, answer.question), h("div", { class: "answer-content" }, h("span", null, isPassword
                 ? this.maskPassword(answer.answer.toString())
-                : /\bssn\b/i.test(answer.type)
+                : /\bssn\b/i.test(answer.type.toLowerCase())
                     ? this.maskSSN(answer.answer.toString())
                     : typeof answer.answer === 'string'
                         ? answer.answer
                         : JSON.stringify(answer.answer)), h("button", { class: "edit-button", onClick: () => this.showEditConfirmation(originalIndex), "aria-label": "Edit answer" }))));
         });
     }
+    /*This will reverse the previous ans*/
+    // private renderPreviousAnswers() {
+    //   // Create a copy of answers array and reverse it
+    //   const reversedAnswers = [...this.answers].reverse();
+    //   return reversedAnswers.map((answer, index) => {
+    //     // Calculate the original index for edit functionality
+    //     const originalIndex = this.answers.length - 1 - index;
+    //     return (
+    //       <div class="previous-answer" key={originalIndex}>
+    //         <div class="answer-header">{answer.question}</div>
+    //         <div class="answer-content">
+    //           <span>
+    //             {/\bpassword\b/i.test(answer.type.toLowerCase())
+    //               ? this.maskPassword(answer.answer.toString())
+    //               : /\bssn\b/i.test(answer.type.toLowerCase())
+    //               ? this.maskSSN(answer.answer.toString())
+    //               : typeof answer.answer === 'string'
+    //               ? answer.answer
+    //               : JSON.stringify(answer.answer)}
+    //           </span>
+    //           <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
+    //         </div>
+    //       </div>
+    //     );
+    //   });
+    // }
     // private renderPreviousAnswers() {
     //   return this.answers.map((answer, index) => (
     //     <div class="previous-answer" key={index}>
@@ -4501,22 +4945,119 @@ const InsuranceChat = class {
     //   ));
     // }
     renderCurrentQuestion() {
+        var _a;
         if (!this.currentQuestion)
             return null;
-        return (h("div", { class: "current-question" }, h("div", { class: "avatar" }, h("img", { src: "https://raw.githubusercontent.com/dpmanek/images/refs/heads/main/Deep%20Manek%20image.png", alt: "Agent avatar" })), h("div", { class: "question-content" }, h("div", { class: "question-text" }), this.currentQuestion.component && this.showForm && (h("form", { onSubmit: e => this.handleSubmit(e), class: "question-form visible" }, h("div", { class: "input-group" }, !this.userName
+        return (h("div", { class: "current-question" }, h("div", { class: "avatar" }, h("img", { src: "/assets/image/Bot Avatar.png", alt: "Agent avatar" })), h("div", { class: "question-content" }, h("div", { class: "question-text", style: { display: this.isLoading ? 'none' : 'block' } }), this.isLoading && (h("div", { class: "typing-indicator" }, h("span", null), h("span", null), h("span", null))), !this.isLoading && this.currentQuestion.component && this.showForm && (h("form", { onSubmit: e => this.handleSubmit(e), class: "question-form visible" }, h("div", { class: "input-groupName" }, !this.userName
             ? [
                 h("div", { class: "input-wrapper" }, h("input", { type: "text", placeholder: "First name", value: this.firstName, onInput: this.handleFirstNameInput, ref: el => (this.firstNameInput = el), required: true })),
                 h("div", { class: "input-wrapper" }, h("input", { type: "text", placeholder: "Last name", value: this.lastName, onInput: this.handleLastNameInput, required: true })),
             ]
-            : this.renderFormComponent()), this.validationError && h("div", { class: "validation-error" }, this.validationError), h("button", { type: "submit", disabled: this.isLoading || (!this.userName && (!this.firstName.trim() || !this.lastName.trim())) || (this.userName && !this.primaryValue.trim()) }, this.isLoading ? 'Loading...' : this.answers.length === 0 ? 'Get started' : 'Next'))), this.progress > 0 && (h("div", { class: "progress-bar" }, h("div", { class: "progress", style: { width: `${this.progress}%` } }))))));
+            : this.renderFormComponent()), this.validationError && h("div", { class: "validation-error" }, this.validationError), h("button", { type: "submit", disabled: this.isLoading ||
+                (!this.userName
+                    ? !this.firstName.trim() || !this.lastName.trim()
+                    : Array.isArray(this.currentQuestion.component)
+                        ? this.currentQuestion.component.some((_, index) => { var _a; return !((_a = this.inputValues[`component-${index}`]) === null || _a === void 0 ? void 0 : _a.trim()); })
+                        : !((_a = this.inputValues['component-0']) === null || _a === void 0 ? void 0 : _a.trim())) }, this.isLoading ? 'Loading...' : this.answers.length === 0 ? 'Get started' : 'Next'))), this.progress > 0 && (h("div", { class: "progress-bar" }, h("div", { class: "progress", style: { width: `${this.progress}%` } }))))));
     }
+    // private renderCurrentQuestion() {
+    //   if (!this.currentQuestion) return null;
+    //   return (
+    //     <div class="current-question">
+    //       <div class="avatar">
+    //         {/* <img src="https://www.egain.com/chatbot/robin/Chatbot-1-big.jpg" alt="Agent avatar" /> */}
+    //         <img src="https://raw.githubusercontent.com/dpmanek/images/refs/heads/main/Deep%20Manek%20image.png" alt="Agent avatar" />
+    //       </div>
+    //       <div class="question-content">
+    //         <div class="question-text"></div>
+    //         {this.currentQuestion.component && this.showForm && (
+    //           <form onSubmit={e => this.handleSubmit(e)} class="question-form visible">
+    //             <div class="input-groupName">
+    //               {!this.userName
+    //                 ? [
+    //                     <div class="input-wrapper">
+    //                       <input type="text" placeholder="First name" value={this.firstName} onInput={this.handleFirstNameInput} ref={el => (this.firstNameInput = el)} required />
+    //                     </div>,
+    //                     <div class="input-wrapper">
+    //                       <input type="text" placeholder="Last name" value={this.lastName} onInput={this.handleLastNameInput} required />
+    //                     </div>,
+    //                   ]
+    //                 : this.renderFormComponent()}
+    //             </div>
+    //             {this.validationError && <div class="validation-error">{this.validationError}</div>}
+    //             <button
+    //               type="submit"
+    //               disabled={
+    //                 this.isLoading ||
+    //                 (!this.userName
+    //                   ? !this.firstName.trim() || !this.lastName.trim()
+    //                   : Array.isArray(this.currentQuestion.component)
+    //                   ? this.currentQuestion.component.some((_, index) => !this.inputValues[`component-${index}`]?.trim())
+    //                   : !this.inputValues['component-0']?.trim())
+    //               }
+    //             >
+    //               {this.isLoading ? 'Loading...' : this.answers.length === 0 ? 'Get started' : 'Next'}
+    //             </button>
+    //           </form>
+    //         )}
+    //         {this.progress > 0 && (
+    //           <div class="progress-bar">
+    //             <div class="progress" style={{ width: `${this.progress}%` }}></div>
+    //           </div>
+    //         )}
+    //       </div>
+    //     </div>
+    //   );
+    // }
+    // private renderCurrentQuestion() {
+    //   if (!this.currentQuestion) return null;
+    //   return (
+    //     <div class="current-question">
+    //       <div class="avatar">
+    //         {/* <img src="https://www.egain.com/chatbot/robin/Chatbot-1-big.jpg" alt="Agent avatar" /> */}
+    //         <img src="https://raw.githubusercontent.com/dpmanek/images/refs/heads/main/Deep%20Manek%20image.png" alt="Agent avatar" />
+    //       </div>
+    //       <div class="question-content">
+    //         <div class="question-text"></div>
+    //         {this.currentQuestion.component && this.showForm && (
+    //           <form onSubmit={e => this.handleSubmit(e)} class="question-form visible">
+    //             <div class="input-group">
+    //               {!this.userName
+    //                 ? [
+    //                     <div class="input-wrapper">
+    //                       <input type="text" placeholder="First name" value={this.firstName} onInput={this.handleFirstNameInput} ref={el => (this.firstNameInput = el)} required />
+    //                     </div>,
+    //                     <div class="input-wrapper">
+    //                       <input type="text" placeholder="Last name" value={this.lastName} onInput={this.handleLastNameInput} required />
+    //                     </div>,
+    //                   ]
+    //                 : this.renderFormComponent()}
+    //             </div>
+    //             {this.validationError && <div class="validation-error">{this.validationError}</div>}
+    //             <button
+    //               type="submit"
+    //               disabled={this.isLoading || (!this.userName && (!this.firstName.trim() || !this.lastName.trim())) || (this.userName && !this.primaryValue.trim())}
+    //             >
+    //               {this.isLoading ? 'Loading...' : this.answers.length === 0 ? 'Get started' : 'Next'}
+    //             </button>
+    //           </form>
+    //         )}
+    //         {this.progress > 0 && (
+    //           <div class="progress-bar">
+    //             <div class="progress" style={{ width: `${this.progress}%` }}></div>
+    //           </div>
+    //         )}
+    //       </div>
+    //     </div>
+    //   );
+    // }
     renderEditModal() {
         if (!this.showEditModal)
             return null;
         return (h("div", { class: "modal-overlay" }, h("div", { class: "modal-dialog" }, h("div", { class: "modal-header" }, "Edit question?"), h("div", { class: "modal-content" }, "If you do, you'll need to re-answer all questions that follow it"), h("div", { class: "modal-buttons" }, h("button", { class: "modal-button secondary", onClick: () => this.cancelEditConfirmation() }, "Cancel"), h("button", { class: "modal-button primary", onClick: () => this.confirmEdit() }, "Yes, Edit")))));
     }
     render() {
-        return (h("div", { key: '47b8197caff444efc6fd3f0a099b8285ea045cdd', class: "app-wrapper" }, h("div", { key: 'd3acd5bfcf5f6288510bf0d8f986c77c089e5de0', class: "container" }, h("app-navbar", { key: 'a43f74e3896fc80d0ee28714cbb31be76e1cff91' }), h("div", { key: 'cedb4c91fad3e5ec92bf6757ee618b4568595800', class: "chat-interface", ref: el => (this.chatInterface = el) }, this.renderCurrentQuestion(), this.renderPreviousAnswers()), this.renderEditModal())));
+        return (h("div", { key: 'ec1941ec27cbecc397c60a54358e0492e3dada1d', class: "app-wrapper" }, h("div", { key: '43f9471dfed4554ce4b4d6fdcf21213ed3d34f62', class: "container" }, h("app-navbar", { key: '3288c050287eb977855f30ea8f16bc9af0c23d49' }), h("div", { key: 'cab1772aace4ef119ea587d3c7be16e68431e9aa', class: "chat-interface", ref: el => (this.chatInterface = el) }, this.renderCurrentQuestion(), this.renderPreviousAnswers()), this.renderEditModal())));
     }
     get el() { return getElement(this); }
 };
