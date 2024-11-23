@@ -4601,7 +4601,7 @@ const InsuranceChat = class {
                     const max = twentyYearsAgo.toISOString().split('T')[0];
                     return (h("div", { class: wrapperClass, key: `date-picker-${index}` }, h("input", { type: "date", max: max, value: this.inputValues[`component-${index}`] || '', onInput: e => this.handleInput(e, index), ref: el => (this.primaryInput = el), required: true })));
                 case 'Email':
-                    return (h("div", { class: wrapperClass, key: `email-${index}` }, h("input", { type: "email", placeholder: component.label || 'Enter email address', value: this.inputValues[`component-${index}`] || '', onInput: e => this.handleInput(e, index), ref: el => (this.primaryInput = el), required: true, pattern: "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$", title: "Please enter a valid email address" })));
+                    return (h("div", { class: wrapperClass, key: `email-${index}` }, h("input", { type: "email", placeholder: component.label || 'Enter email address', value: this.inputValues[`component-${index}`] || '', onInput: e => this.handleInput(e, index), ref: el => (this.primaryInput = el), required: true, pattern: "[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}", title: "Please enter a valid email address" })));
                 case 'Password':
                     return (h("div", { class: wrapperClass, key: `password-${index}` }, h("input", { type: "password", placeholder: component.label || 'Enter Password', value: this.inputValues[`component-${index}`] || '', onInput: e => this.handleInput(e, index), ref: el => (this.primaryInput = el), required: true, minLength: 8, pattern: "(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,}", title: "Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number." })));
                 case 'SSN':
@@ -5093,7 +5093,7 @@ const InsuranceChat = class {
         return (h("div", { class: "modal-overlay" }, h("div", { class: "modal-dialog" }, h("div", { class: "modal-header" }, "Edit question?"), h("div", { class: "modal-content" }, "If you do, you'll need to re-answer all questions that follow it"), h("div", { class: "modal-buttons" }, h("button", { class: "modal-button secondary", onClick: () => this.cancelEditConfirmation() }, "Cancel"), h("button", { class: "modal-button primary", onClick: () => this.confirmEdit() }, "Yes, Edit")))));
     }
     render() {
-        return (h("div", { key: 'ea565aef44f891e16e1afb33a2bf7763898b4cfe', class: "app-wrapper" }, h("div", { key: '6226ca9b6425e90b923b81b04d640934232a432d', class: "container" }, h("app-navbar", { key: 'e3c0b40ee6c10f725353d833799faa8195c34649' }), h("div", { key: '12855e5a6f08b3ec0e57fc11f2cd74e5bc294a4a', class: "chat-interface", ref: el => (this.chatInterface = el) }, this.renderCurrentQuestion(), this.renderPreviousAnswers()), this.renderEditModal())));
+        return (h("div", { key: 'b398c73e07373bb3c474c58d95f1b8486eba49d4', class: "app-wrapper" }, h("div", { key: 'f1d1e9e0437d547fd6b4eb040b8c13b69c6f8a71', class: "container" }, h("app-navbar", { key: 'c1cf025b194f5373ec7daf4309cbc78a35701d56' }), h("div", { key: '711ee591ef270597a39e510565f4a0ff8d6245ec', class: "chat-interface", ref: el => (this.chatInterface = el) }, this.renderCurrentQuestion(), this.renderPreviousAnswers()), this.renderEditModal())));
     }
     get el() { return getElement(this); }
 };
