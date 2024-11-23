@@ -7,7 +7,7 @@ const Navbar = class {
         registerInstance(this, hostRef);
     }
     render() {
-        return (h("nav", { key: '730ba34895d0373c8ccf670b8931f79cfc873045', class: "navbar" }, h("img", { key: '893849f53ae02435b280cd45dd18384fcf1931b9', src: "/assets/image/Vanguard logo.png", alt: "Logo", class: "navbar-logo" })));
+        return (h("nav", { key: '49175e6b0d97b7afdb7179976c7df059a862ecbe', class: "navbar" }, h("img", { key: 'a7290569773735d613073ea095ec8afd65cb54fc', src: "/assets/image/Vanguard logo.png", alt: "Logo", class: "navbar-logo" })));
     }
 };
 Navbar.style = navbarCss;

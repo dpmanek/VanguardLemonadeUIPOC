@@ -1,7 +1,7 @@
 import { Component, State, Element, h } from '@stencil/core';
 import Typed from 'typed.js';
 // import { ValidationRule, FormComponent, BedrockResponse, validateInput, startTyping, getMockBedrockResponse } from './insurance-chat.utils';
-import { ValidationRule, FormComponent, BedrockResponse, validateInput, startTyping, getMockBedrockResponse, getMockBedrockResponse1 } from './insurance-chat.utils';
+import { ValidationRule, FormComponent, BedrockResponse, validateInput, startTyping, getMockBedrockResponse1 } from './insurance-chat.utils';
 
 @Component({
   tag: 'insurance-chat',
@@ -33,7 +33,7 @@ export class InsuranceChat {
   @Element() el: HTMLElement;
 
   private typed: Typed;
-  private typingSpeed: number = 15;
+  private typingSpeed: number = 5;
   private typingDelay: number = 500;
   private firstNameInput: HTMLInputElement;
   private primaryInput: HTMLInputElement | HTMLSelectElement;
@@ -325,24 +325,7 @@ export class InsuranceChat {
 
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        // const greetingText = `Hi ${this.userName}, how may I help you today?`;
-        // this.currentQuestion = {
-        //   text: greetingText,
-        //   component: {
-        //     type: 'TextBox',
-        //     label: 'How can we help?',
-        //     validationRules: [
-        //       {
-        //         type: 'Required',
-        //         message: 'Please let us know how we can help',
-        //       },
-        //     ],
-        //   },
-        // };
-
-        // await this.initializeTyping(greetingText);
-        // return;
-
+        /* First Call to Bedrock API - for getting initial response */
         try {
           const response = await getMockBedrockResponse1(this.sessionId, ' ', `Hi I am ${this.userName}`, 1);
           this.progress = response.progress;
@@ -403,110 +386,251 @@ export class InsuranceChat {
       // this.chatInterface.scrollTop = this.chatInterface.scrollHeight;
     }
   }
-
   private renderFormComponent() {
-    if (!this.currentQuestion.component) return null;
+    if (!Array.isArray(this.currentQuestion.component) || this.currentQuestion.component.length === 0) return null;
 
-    switch (this.currentQuestion.component.type) {
-      case 'TextBox':
-        return (
-          <div class="input-wrapper">
-            <input
-              type="text"
-              placeholder={this.currentQuestion.component.format || this.currentQuestion.component.label}
-              value={this.primaryValue}
-              onInput={this.handleInput}
-              ref={el => (this.primaryInput = el)}
-              required
-            />
-          </div>
-        );
+    return this.currentQuestion.component.map((component, index) => {
+      switch (component.type) {
+        case 'TextBox':
+          return (
+            <div class="input-wrapper" key={`textbox-${index}`}>
+              <input
+                type="text"
+                placeholder={component.format || component.label}
+                value={this.primaryValue}
+                onInput={this.handleInput}
+                ref={el => (this.primaryInput = el)}
+                required
+              />
+            </div>
+          );
 
-      case 'Select':
-        return (
-          <div class="input-wrapper">
-            <select onInput={this.handleInput} ref={el => (this.primaryInput = el)} required>
-              <option value="">Select {this.currentQuestion.component.label}</option>
-              {this.currentQuestion.component.options?.map(option => (
-                <option value={option} selected={this.primaryValue === option}>
-                  {option}
-                </option>
+        case 'DropDown':
+        case 'Select':
+          return (
+            <div class="input-wrapper" key={`select-${index}`}>
+              <select onInput={this.handleInput} ref={el => (this.primaryInput = el)} required>
+                <option value="">Select {component.label}</option>
+                {component.options?.map(option => (
+                  <option value={option} selected={this.primaryValue === option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+
+        case 'RadioButton':
+        case 'Radio':
+          return (
+            <div class="radio-group" key={`radio-${index}`}>
+              {component.options?.map(option => (
+                <label class="radio-label" key={`${option}-${index}`}>
+                  <input type="radio" name={`radio-option-${index}`} value={option} checked={this.primaryValue === option} onInput={this.handleInput} />
+                  <span>{option}</span>
+                </label>
               ))}
-            </select>
-          </div>
-        );
+            </div>
+          );
 
-      case 'Radio':
-        return (
-          <div class="radio-group">
-            {this.currentQuestion.component.options?.map(option => (
-              <label class="radio-label">
-                <input type="radio" name="radio-option" value={option} checked={this.primaryValue === option} onInput={this.handleInput} />
-                <span>{option}</span>
-              </label>
-            ))}
-          </div>
-        );
+        case 'DatePicker':
+          const twentyYearsAgo = new Date();
+          twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
+          const max = twentyYearsAgo.toISOString().split('T')[0];
+          return (
+            <div class="input-wrapper" key={`date-picker-${index}`}>
+              <input type="date" max={max} value={this.primaryValue} onInput={this.handleInput} ref={el => (this.primaryInput = el)} required />
+            </div>
+          );
 
-      case 'DatePicker':
-        // const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-        const twentyYearsAgo = new Date();
-        twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
-        const max = twentyYearsAgo.toISOString().split('T')[0];
-        return (
-          <div class="input-wrapper">
-            <input type="date" max={max} value={this.primaryValue} onInput={this.handleInput} ref={el => (this.primaryInput = el)} required />
-          </div>
-        );
+        case 'Email':
+          return (
+            <div class="input-wrapper" key={`email-${index}`}>
+              <input
+                type="email"
+                placeholder={component.label || 'Enter email address'}
+                value={this.primaryValue}
+                onInput={this.handleInput}
+                ref={el => (this.primaryInput = el)}
+                required
+                pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                title="Please enter a valid email address"
+              />
+            </div>
+          );
 
-      case 'Password':
-        return (
-          <div class="input-wrapper">
-            <input
-              type="password"
-              placeholder={this.currentQuestion.component.label || 'Enter Password'}
-              value={this.primaryValue}
-              onInput={this.handleInput}
-              ref={el => (this.primaryInput = el)}
-              required
-              minLength={8} // Example: Minimum length for password validation
-              pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" // Example: Regex for password strength
-              title="Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number."
-            />
-          </div>
-        );
-      case 'SSN':
-        const formatSSN = event => {
-          let value = event.target.value.replace(/\D/g, ''); // Remove non-numeric characters
-          if (value.length > 3 && value.length <= 5) {
-            value = value.replace(/^(\d{3})(\d{0,2})/, '$1-$2'); // Format as ###-##
-          } else if (value.length > 5) {
-            value = value.replace(/^(\d{3})(\d{2})(\d{0,4})/, '$1-$2-$3'); // Format as ###-##-####
-          }
-          event.target.value = value; // Update the input value
-          this.primaryValue = value; // Update the internal state
-          this.handleInput(event); // Call the existing input handler
-        };
+        case 'Password':
+          return (
+            <div class="input-wrapper" key={`password-${index}`}>
+              <input
+                type="password"
+                placeholder={component.label || 'Enter Password'}
+                value={this.primaryValue}
+                onInput={this.handleInput}
+                ref={el => (this.primaryInput = el)}
+                required
+                minLength={8}
+                pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                title="Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number."
+              />
+            </div>
+          );
 
-        return (
-          <div class="input-wrapper">
-            <input
-              type="text"
-              placeholder={this.currentQuestion.component.label || 'Enter SSN'}
-              value={this.primaryValue}
-              onInput={formatSSN}
-              ref={el => (this.primaryInput = el)}
-              required
-              maxLength={11} // SSN Format: ###-##-####
-              pattern="\d{3}-\d{2}-\d{4}" // Regex to enforce SSN format
-              title="SSN must be in the format ###-##-####"
-            />
-          </div>
-        );
-      default:
-        return null;
-    }
+        case 'SSN':
+          const formatSSN = event => {
+            let value = event.target.value.replace(/\D/g, '');
+            if (value.length > 3 && value.length <= 5) {
+              value = value.replace(/^(\d{3})(\d{0,2})/, '$1-$2');
+            } else if (value.length > 5) {
+              value = value.replace(/^(\d{3})(\d{2})(\d{0,4})/, '$1-$2-$3');
+            }
+            event.target.value = value;
+            this.primaryValue = value;
+            this.handleInput(event);
+          };
+
+          return (
+            <div class="input-wrapper" key={`ssn-${index}`}>
+              <input
+                type="text"
+                placeholder={component.label || 'Enter SSN'}
+                value={this.primaryValue}
+                onInput={formatSSN}
+                ref={el => (this.primaryInput = el)}
+                required
+                maxLength={11}
+                pattern="\d{3}-\d{2}-\d{4}"
+                title="SSN must be in the format ###-##-####"
+              />
+            </div>
+          );
+
+        default:
+          return null;
+      }
+    });
   }
+
+  /** OLD CODE TO RENDER ONLY ONE ELEMENT */
+  // private renderFormComponent() {
+  //   if (!this.currentQuestion.component) return null;
+
+  //   switch (this.currentQuestion.component.type) {
+  //     case 'TextBox':
+  //       return (
+  //         <div class="input-wrapper">
+  //           <input
+  //             type="text"
+  //             placeholder={this.currentQuestion.component.format || this.currentQuestion.component.label}
+  //             value={this.primaryValue}
+  //             onInput={this.handleInput}
+  //             ref={el => (this.primaryInput = el)}
+  //             required
+  //           />
+  //         </div>
+  //       );
+
+  //     case 'Select':
+  //       return (
+  //         <div class="input-wrapper">
+  //           <select onInput={this.handleInput} ref={el => (this.primaryInput = el)} required>
+  //             <option value="">Select {this.currentQuestion.component.label}</option>
+  //             {this.currentQuestion.component.options?.map(option => (
+  //               <option value={option} selected={this.primaryValue === option}>
+  //                 {option}
+  //               </option>
+  //             ))}
+  //           </select>
+  //         </div>
+  //       );
+
+  //     case 'Radio':
+  //       return (
+  //         <div class="radio-group">
+  //           {this.currentQuestion.component.options?.map(option => (
+  //             <label class="radio-label">
+  //               <input type="radio" name="radio-option" value={option} checked={this.primaryValue === option} onInput={this.handleInput} />
+  //               <span>{option}</span>
+  //             </label>
+  //           ))}
+  //         </div>
+  //       );
+
+  //     case 'DatePicker':
+  //       // const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  //       const twentyYearsAgo = new Date();
+  //       twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
+  //       const max = twentyYearsAgo.toISOString().split('T')[0];
+  //       return (
+  //         <div class="input-wrapper">
+  //           <input type="date" max={max} value={this.primaryValue} onInput={this.handleInput} ref={el => (this.primaryInput = el)} required />
+  //         </div>
+  //       );
+
+  //     case 'Email':
+  //       return (
+  //         <div class="input-wrapper">
+  //           <input
+  //             type="email"
+  //             placeholder={this.currentQuestion.component.label || 'Enter email address'}
+  //             value={this.primaryValue}
+  //             onInput={this.handleInput}
+  //             ref={el => (this.primaryInput = el)}
+  //             required
+  //             pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+  //             title="Please enter a valid email address"
+  //           />
+  //         </div>
+  //       );
+
+  //     case 'Password':
+  //       return (
+  //         <div class="input-wrapper">
+  //           <input
+  //             type="password"
+  //             placeholder={this.currentQuestion.component.label || 'Enter Password'}
+  //             value={this.primaryValue}
+  //             onInput={this.handleInput}
+  //             ref={el => (this.primaryInput = el)}
+  //             required
+  //             minLength={8} // Example: Minimum length for password validation
+  //             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" // Example: Regex for password strength
+  //             title="Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number."
+  //           />
+  //         </div>
+  //       );
+  //     case 'SSN':
+  //       const formatSSN = event => {
+  //         let value = event.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+  //         if (value.length > 3 && value.length <= 5) {
+  //           value = value.replace(/^(\d{3})(\d{0,2})/, '$1-$2'); // Format as ###-##
+  //         } else if (value.length > 5) {
+  //           value = value.replace(/^(\d{3})(\d{2})(\d{0,4})/, '$1-$2-$3'); // Format as ###-##-####
+  //         }
+  //         event.target.value = value; // Update the input value
+  //         this.primaryValue = value; // Update the internal state
+  //         this.handleInput(event); // Call the existing input handler
+  //       };
+
+  //       return (
+  //         <div class="input-wrapper">
+  //           <input
+  //             type="text"
+  //             placeholder={this.currentQuestion.component.label || 'Enter SSN'}
+  //             value={this.primaryValue}
+  //             onInput={formatSSN}
+  //             ref={el => (this.primaryInput = el)}
+  //             required
+  //             maxLength={11} // SSN Format: ###-##-####
+  //             pattern="\d{3}-\d{2}-\d{4}" // Regex to enforce SSN format
+  //             title="SSN must be in the format ###-##-####"
+  //           />
+  //         </div>
+  //       );
+  //     default:
+  //       return null;
+  //   }
+  // }
 
   //masks ssn
   private maskSSN(ssn: string): string {

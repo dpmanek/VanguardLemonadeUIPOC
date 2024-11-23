@@ -3856,125 +3856,14 @@ const startTyping = async (element, text, typingSpeed, typingDelay) => {
         });
     });
 };
-const getMockBedrockResponse = (userName, inquiry, answersLength = 1) => {
-    const questions = [
-        {
-            text: 'Please provide your date of birth',
-            component: {
-                type: 'DatePicker',
-                label: 'Date of Birth',
-                validationRules: [
-                    {
-                        type: 'Required',
-                        message: 'Date of birth is required',
-                    },
-                    {
-                        type: 'CustomRule',
-                        message: 'Please enter a valid date that is not in the future',
-                        validate: value => {
-                            const selectedDate = new Date(value);
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0); // Reset time to start of day for fair comparison
-                            return selectedDate <= today;
-                        },
-                    },
-                ],
-            },
-            progress: 40,
-        },
-        {
-            text: 'What is your annual income range?',
-            component: {
-                type: 'Select',
-                label: 'Annual Income',
-                options: ['Less than $30,000', '$30,000 - $50,000', '$50,000 - $75,000', '$75,000 - $100,000', 'More than $100,000'],
-                validationRules: [
-                    {
-                        type: 'Required',
-                        message: 'Annual income range is required',
-                    },
-                ],
-            },
-            progress: 55,
-        },
-        {
-            text: 'What is your annual income range?',
-            component: {
-                type: 'Radio',
-                label: 'Annual Income',
-                options: ['< $30K', '$30K - $50K', '$50K - $75K', '$75K - $100K', '> $100K'],
-                validationRules: [
-                    {
-                        type: 'Required',
-                        message: 'Annual income range is required',
-                    },
-                ],
-            },
-            progress: 65,
-        },
-        {
-            text: 'Do you smoke or use tobacco products?',
-            component: {
-                type: 'Radio',
-                label: 'Smoking Status',
-                options: ['Yes', 'No'],
-                validationRules: [
-                    {
-                        type: 'Required',
-                        message: 'Please select an option',
-                    },
-                ],
-            },
-            progress: 70,
-        },
-        {
-            text: 'What is your occupation?',
-            component: {
-                type: 'TextBox',
-                label: 'Occupation',
-                validationRules: [
-                    {
-                        type: 'Required',
-                        message: 'Occupation is required',
-                    },
-                ],
-            },
-            progress: 85,
-        },
-        {
-            text: 'What type of insurance coverage are you interested in?',
-            component: {
-                type: 'Select',
-                label: 'Coverage Type',
-                options: ['Term Life Insurance', 'Whole Life Insurance', 'Universal Life Insurance', 'Variable Life Insurance', 'Not sure - need more information'],
-                validationRules: [
-                    {
-                        type: 'Required',
-                        message: 'Please select a coverage type',
-                    },
-                ],
-            },
-            progress: 100,
-        },
-    ];
-    const currentQuestion = questions[answersLength - 1] || questions[questions.length - 1];
-    return {
-        text: currentQuestion.text,
-        component: currentQuestion.component,
-        dataCollected: [
-            {
-                name: userName,
-                inquiry: inquiry,
-            },
-        ],
-        progress: currentQuestion.progress,
-    };
-};
+/** Actually - Bedrock */
 const getMockBedrockResponse1 = async (sessionId, userName, inquiry, answersLength = 1) => {
     try {
-        const response = await axios.post('http://localhost:7000/chat', {
+        const url1 = 'https://4nm82v58i4.execute-api.us-east-1.amazonaws.com/dev/chat';
+        const url2 = 'http://localhost:7000/chat2';
+        const response = await axios.post(url2, {
             session_id: sessionId,
-            message: `USERNAME: ${userName} INQUIRY: ${inquiry}`,
+            message: `${inquiry}`,
         }, {
             headers: {
                 'Content-Type': 'application/json',
@@ -3982,20 +3871,16 @@ const getMockBedrockResponse1 = async (sessionId, userName, inquiry, answersLeng
         });
         //AXIOS PUTS ENTIRE RESPONSE IN DATA
         const data = response.data;
-        // console.log('data:::::');
-        // console.log(data);
-        const currentQuestion = data[answersLength - 1] || data[data.length - 1];
+        console.log('data:::::');
+        console.log(data);
+        // const currentQuestion = data[answersLength - 1] || data[data.length - 1];
+        const currentQuestion = response.data;
         // console.log('currentQuestion:::::');
         // console.log(currentQuestion);
         return {
             text: currentQuestion.text,
             component: currentQuestion.component,
-            dataCollected: [
-                {
-                    name: userName,
-                    inquiry: inquiry,
-                },
-            ],
+            dataCollected: currentQuestion.data,
             progress: currentQuestion.progress,
         };
     }
@@ -4004,6 +3889,44 @@ const getMockBedrockResponse1 = async (sessionId, userName, inquiry, answersLeng
         throw error;
     }
 };
+/** MOCK OLD API */
+// export const getMockBedrockResponse1 = async (sessionId: string, userName: string, inquiry: string, answersLength: number = 1): Promise<BedrockResponse> => {
+//   try {
+//     const response = await axios.post(
+//       'http://localhost:7000/chat',
+//       {
+//         session_id: sessionId,
+//         message: `${inquiry}`,
+//       },
+//       {
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//       },
+//     );
+//     //AXIOS PUTS ENTIRE RESPONSE IN DATA
+//     const data = response.data;
+//     // console.log('data:::::');
+//     // console.log(data);
+//     const currentQuestion = data[answersLength - 1] || data[data.length - 1];
+//     // console.log('currentQuestion:::::');
+//     // console.log(currentQuestion);
+//     return {
+//       text: currentQuestion.text,
+//       component: currentQuestion.component,
+//       dataCollected: [
+//         {
+//           name: userName,
+//           inquiry: inquiry,
+//         },
+//       ],
+//       progress: currentQuestion.progress,
+//     };
+//   } catch (error) {
+//     console.error('Error calling NODEJS API:', error);
+//     throw error;
+//   }
+// };
 const EditMockBedrockResponse1 = async (sessionId, previousQuestion, previousAnswer, answersLength = 1) => {
     try {
         const response = await axios.post('http://localhost:7000/chat', {
@@ -4034,13 +3957,14 @@ const EditMockBedrockResponse1 = async (sessionId, previousQuestion, previousAns
         throw error;
     }
 };
+//
 
-const insuranceChatCss = ".app-wrapper{min-height:100vh;display:flex;flex-direction:column}.container{display:flex;justify-content:center;flex:1;background:#fff;padding:76px 20px 20px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;user-select:none;overflow:hidden}.chat-interface{width:100%;max-width:600px;margin:0;padding:20px;overflow-y:auto;max-height:calc(100vh - 96px);position:relative;scroll-behavior:smooth;display:flex;flex-direction:column-reverse;justify-content:flex-start;background:#fff;gap:16px}.chat-interface::-webkit-scrollbar{width:6px}.chat-interface::-webkit-scrollbar-track{background:transparent}.chat-interface::-webkit-scrollbar-thumb{background:#fff;border-radius:3px}.previous-page{display:flex;flex-direction:column;gap:16px;padding-bottom:32px;margin-bottom:32px;border-bottom:1px solid #e0e0e0;opacity:0.7;transition:opacity 0.3s ease}.previous-page:hover{opacity:1}.current-page{display:flex;flex-direction:column;gap:16px;padding-top:16px;position:relative;background:#fff}.current-page::before{content:'';position:absolute;top:-20px;left:0;right:0;height:20px;background:linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);pointer-events:none}@keyframes slideUp{from{transform:translateY(20px)}to{transform:translateY(0)}}.previous-answer{text-align:left;padding:0;position:relative;min-height:60px;background:#fff;animation:slideUp 0.3s ease-out forwards;opacity:1;transition:opacity 0.3s ease, transform 0.3s ease, height 0.3s ease, margin 0.3s ease}.previous-answer.hidden{opacity:0;transform:translateY(-20px);height:0;margin:0;padding:0;overflow:hidden;pointer-events:none}.current-question{opacity:1;transform:translateY(0);transition:opacity 0.3s ease, transform 0.3s ease}.current-question{display:flex;gap:12px;min-height:60px;max-width:500px;position:relative;opacity:0;animation:fadeInStatic 0.3s ease-out forwards;background:#fff;padding-bottom:calc(100vh - 40%);padding-top:10px}.answer-header{font-size:16px;margin-bottom:8px;color:#949494;font-weight:600}.answer-content{font-size:15px;color:#4a4a4a;font-weight:600;line-height:1.5;display:flex;justify-content:space-between;align-items:center;gap:20px}.edit-button{background:transparent;color:#666;min-width:auto;padding:4px;font-size:12px;width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;position:absolute;right:-24px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:0;transition:opacity 0.2s ease}.previous-answer:hover .edit-button{opacity:1}.edit-button:hover:not(:disabled){background:#f0f0f0}.edit-button::before{content:'';display:block;width:16px;height:16px;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'%3E%3C/path%3E%3C/svg%3E\");background-size:contain;background-repeat:no-repeat}.edit-input{flex:1;min-width:160px;padding:4px 8px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px}.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0, 0, 0, 0.5);display:flex;justify-content:center;align-items:center;z-index:1000;animation:fadeIn 0.2s ease-out}.modal-dialog{background:white;border-radius:12px;padding:24px;width:90%;max-width:400px;box-shadow:0 4px 20px rgba(0, 0, 0, 0.15);animation:slideIn 0.3s ease-out}.modal-header{font-size:18px;font-weight:500;color:#2d2d2d;margin-bottom:16px;text-align:center}.modal-content{font-size:14px;color:#666;margin-bottom:24px;text-align:center;line-height:1.5}.modal-buttons{display:flex;gap:12px;justify-content:center}.modal-button{flex:1;max-width:120px;height:40px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s ease}.modal-button.primary{background:#c20029;color:white;border:none}.modal-button.secondary{background:transparent;color:#2d2d2d;border:1px solid #e0e0e0}.modal-button:hover{opacity:0.9}@keyframes slideIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeInStatic{0%{opacity:0}100%{opacity:1}}.avatar{width:35px;height:35px;border-radius:50%;overflow:hidden;flex-shrink:0}.avatar img{width:100%;height:100%;object-fit:cover}.question-content{flex:1;background:#fff}.question-text{font-size:16px;color:#666;margin-bottom:16px;line-height:1.5;font-weight:400;min-height:20px}.typed-cursor{display:none}.question-form{opacity:0;transform:translateY(10px);transition:all 0.3s ease;pointer-events:none;background:#fff}.question-form.visible{opacity:1;transform:translateY(0);pointer-events:all}.input-group{display:flex;gap:8px;margin-bottom:12px;max-width:400px}.input-wrapper{flex:1;display:flex;flex-direction:column;gap:4px}input,select{border:1px solid #e0e0e0;border-radius:6px;font-size:14px;color:#2d2d2d;background:#fff;transition:all 0.2s ease;height:36px;padding:0 12px;cursor:text;appearance:none;-webkit-appearance:none}input[type='text']{width:180px}input[type='date']{width:140px;padding-right:32px;color:#96151d}input[type='date']::-webkit-calendar-picker-indicator{background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2396151D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E\");background-size:16px;cursor:pointer;filter:opacity(0.8)}input[type='date']::-webkit-datetime-edit{color:#96151d}input[type='date']::-webkit-datetime-edit-fields-wrapper{color:#96151d}input[type='date']::-webkit-datetime-edit-text{color:#96151d;padding:0 2px}input[type='date']::-webkit-datetime-edit-month-field,input[type='date']::-webkit-datetime-edit-day-field,input[type='date']::-webkit-datetime-edit-year-field{color:#96151d}input[type='date']::-webkit-inner-spin-button{display:none}select{width:100%;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 8px center;background-size:16px;padding-right:32px;cursor:pointer}.radio-group{display:flex;gap:12px;padding:4px 0}.radio-label{position:relative}.radio-label input[type='radio']{position:absolute;opacity:0;width:0;height:0}.radio-label span{display:inline-block;padding:8px 16px;font-size:14px;color:#2d2d2d;background:#fff;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;transition:all 0.2s ease}.radio-label input[type='radio']:checked+span{background:#96151d;color:#fff;border-color:#96151d}.radio-label:hover span{border-color:#96151d}input::placeholder,select::placeholder{color:#999}input:focus,select:focus{outline:none;border-color:#96151d;box-shadow:0 0 0 1px rgba(150, 21, 29, 0.1)}.validation-error{color:#dc3545;font-size:12px;margin-top:4px;animation:fadeIn 0.3s ease-out}button{display:inline-flex;align-items:center;justify-content:center;min-width:100px;padding:12px 32px;background-color:#c20029;color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s ease;height:48px}button:hover:not(:disabled){background-color:#a30022}button:disabled{background-color:#f5f5f5;color:#999;cursor:not-allowed}.progress-bar{margin-top:20px;height:2px;background-color:#f0f0f0;border-radius:1px;overflow:hidden}.progress{height:100%;background-color:#96151d;transition:width 0.3s ease-in-out}input[type='number']::-webkit-inner-spin-button,input[type='number']::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}input[type='number']{-moz-appearance:textfield}@media (max-width: 480px){.chat-interface{padding:16px}.input-group{flex-direction:column}.question-text{font-size:15px}.answer-header{font-size:15px}button{width:100%}.modal-dialog{width:calc(100% - 32px);padding:20px}.radio-group{width:100%;justify-content:space-between}.radio-label span{width:100%;text-align:center}}";
+const insuranceChatCss = ".app-wrapper{min-height:100vh;display:flex;flex-direction:column}.container{display:flex;justify-content:center;flex:1;background:#fff;padding:76px 20px 20px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;user-select:none;overflow:hidden}.chat-interface{width:100%;max-width:600px;margin:0;padding:20px;overflow-y:auto;max-height:calc(100vh - 96px);position:relative;scroll-behavior:smooth;display:flex;flex-direction:column-reverse;justify-content:flex-start;background:#fff;gap:16px}.chat-interface::-webkit-scrollbar{width:6px}.chat-interface::-webkit-scrollbar-track{background:transparent}.chat-interface::-webkit-scrollbar-thumb{background:#fff;border-radius:3px}.previous-page{display:flex;flex-direction:column;gap:16px;padding-bottom:32px;margin-bottom:32px;border-bottom:1px solid #e0e0e0;opacity:0.7;transition:opacity 0.3s ease}.previous-page:hover{opacity:1}.current-page{display:flex;flex-direction:column;gap:16px;padding-top:16px;position:relative;background:#fff}.current-page::before{content:'';position:absolute;top:-20px;left:0;right:0;height:20px;background:linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);pointer-events:none}@keyframes slideUp{from{transform:translateY(20px)}to{transform:translateY(0)}}.previous-answer{display:flex;flex-direction:column;flex:0 0 auto;}.previous-answer{text-align:left;padding:0;position:relative;min-height:60px;background:#fff;animation:slideUp 0.3s ease-out forwards;opacity:1;transition:opacity 0.3s ease, transform 0.3s ease, height 0.3s ease, margin 0.3s ease}.previous-answer.hidden{opacity:0;transform:translateY(-20px);height:0;margin:0;padding:0;overflow:hidden;pointer-events:none}.current-question{opacity:1;transform:translateY(0);transition:opacity 0.3s ease, transform 0.3s ease}.current-question{display:flex;gap:12px;min-height:60px;max-width:500px;position:relative;opacity:0;animation:fadeInStatic 0.3s ease-out forwards;background:#fff;padding-bottom:calc(100vh - 40%);margin-top:10px}.answer-header{font-size:16px;margin-bottom:8px;color:#949494;font-weight:600}.answer-content{font-size:15px;color:#4a4a4a;font-weight:600;line-height:1.5;display:flex;justify-content:space-between;align-items:center;gap:20px}.edit-button{background:transparent;color:#666;min-width:auto;padding:4px;font-size:12px;width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;position:absolute;right:-24px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:0;transition:opacity 0.2s ease}.previous-answer:hover .edit-button{opacity:1}.edit-button:hover:not(:disabled){background:#f0f0f0}.edit-button::before{content:'';display:block;width:16px;height:16px;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'%3E%3C/path%3E%3C/svg%3E\");background-size:contain;background-repeat:no-repeat}.edit-input{flex:1;min-width:160px;padding:4px 8px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px}.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0, 0, 0, 0.5);display:flex;justify-content:center;align-items:center;z-index:1000;animation:fadeIn 0.2s ease-out}.modal-dialog{background:white;border-radius:12px;padding:24px;width:90%;max-width:400px;box-shadow:0 4px 20px rgba(0, 0, 0, 0.15);animation:slideIn 0.3s ease-out}.modal-header{font-size:18px;font-weight:500;color:#2d2d2d;margin-bottom:16px;text-align:center}.modal-content{font-size:14px;color:#666;margin-bottom:24px;text-align:center;line-height:1.5}.modal-buttons{display:flex;gap:12px;justify-content:center}.modal-button{flex:1;max-width:120px;height:40px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s ease}.modal-button.primary{background:#c20029;color:white;border:none}.modal-button.secondary{background:transparent;color:#2d2d2d;border:1px solid #e0e0e0}.modal-button:hover{opacity:0.9}@keyframes slideIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeInStatic{0%{opacity:0}100%{opacity:1}}.avatar{width:35px;height:35px;border-radius:50%;overflow:hidden;flex-shrink:0}.avatar img{width:100%;height:100%;object-fit:cover}.question-content{flex:1;background:#fff}.question-text{font-size:16px;color:#666;margin-bottom:16px;line-height:1.5;font-weight:400;min-height:20px}.typed-cursor{display:none}.question-form{opacity:0;transform:translateY(10px);transition:all 0.3s ease;pointer-events:none;background:#fff}.question-form.visible{opacity:1;transform:translateY(0);pointer-events:all}.input-group{display:flex;gap:8px;margin-bottom:12px;max-width:400px}.input-wrapper{flex:1;display:flex;flex-direction:column;gap:4px}input,select{border:1px solid #e0e0e0;border-radius:6px;font-size:14px;color:#2d2d2d;background:#fff;transition:all 0.2s ease;height:36px;padding:0 12px;cursor:text;appearance:none;-webkit-appearance:none}input[type='text']{width:180px}input[type='date']{width:140px;padding-right:32px;color:#96151d}input[type='date']::-webkit-calendar-picker-indicator{background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2396151D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E\");background-size:16px;cursor:pointer;filter:opacity(0.8)}input[type='date']::-webkit-datetime-edit{color:#96151d}input[type='date']::-webkit-datetime-edit-fields-wrapper{color:#96151d}input[type='date']::-webkit-datetime-edit-text{color:#96151d;padding:0 2px}input[type='date']::-webkit-datetime-edit-month-field,input[type='date']::-webkit-datetime-edit-day-field,input[type='date']::-webkit-datetime-edit-year-field{color:#96151d}input[type='date']::-webkit-inner-spin-button{display:none}select{width:100%;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 8px center;background-size:16px;padding-right:32px;cursor:pointer}.radio-group{display:flex;gap:12px;flex-wrap:wrap}.radio-label{position:relative;flex:0 1 auto;}.radio-label input[type='radio']{position:absolute;opacity:0;width:0;height:0}.radio-label span{display:inline-block;padding:0 16px;font-size:14px;color:#2d2d2d;background:#fff;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;transition:all 0.2s ease;height:36px;line-height:36px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;}.radio-label input[type='radio']:checked+span{background:#96151d;color:#fff;border-color:#96151d}.radio-label:hover span{border-color:#96151d}input::placeholder,select::placeholder{color:#999}input:focus,select:focus{outline:none;border-color:#96151d;box-shadow:0 0 0 1px rgba(150, 21, 29, 0.1)}.validation-error{color:#dc3545;font-size:12px;margin-top:4px;animation:fadeIn 0.3s ease-out}button{display:inline-flex;align-items:center;justify-content:center;min-width:100px;padding:12px 32px;background-color:#c20029;color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s ease;height:48px}button:hover:not(:disabled){background-color:#a30022}button:disabled{background-color:#f5f5f5;color:#999;cursor:not-allowed}.progress-bar{margin-top:20px;height:2px;background-color:#f0f0f0;border-radius:1px;overflow:hidden}.progress{height:100%;background-color:#96151d;transition:width 0.3s ease-in-out}input[type='number']::-webkit-inner-spin-button,input[type='number']::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}input[type='number']{-moz-appearance:textfield}@media (max-width: 480px){.chat-interface{padding:16px}.input-group{flex-direction:column}.question-text{font-size:15px}.answer-header{font-size:15px}button{width:100%}.modal-dialog{width:calc(100% - 32px);padding:20px}.radio-group{width:100%;justify-content:space-between}.radio-label span{width:100%;text-align:center}}";
 
 const InsuranceChat = class {
     constructor(hostRef) {
         registerInstance(this, hostRef);
-        this.typingSpeed = 15;
+        this.typingSpeed = 5;
         this.typingDelay = 500;
         this.initialQuestion = "Let's begin! What's your name?";
         this.handleFirstNameInput = (e) => {
@@ -4309,22 +4233,7 @@ const InsuranceChat = class {
                 this.lastName = '';
                 this.isLoading = false;
                 await new Promise(resolve => setTimeout(resolve, 100));
-                // const greetingText = `Hi ${this.userName}, how may I help you today?`;
-                // this.currentQuestion = {
-                //   text: greetingText,
-                //   component: {
-                //     type: 'TextBox',
-                //     label: 'How can we help?',
-                //     validationRules: [
-                //       {
-                //         type: 'Required',
-                //         message: 'Please let us know how we can help',
-                //       },
-                //     ],
-                //   },
-                // };
-                // await this.initializeTyping(greetingText);
-                // return;
+                /* First Call to Bedrock API - for getting initial response */
                 try {
                     const response = await getMockBedrockResponse1(this.sessionId, ' ', `Hi I am ${this.userName}`, 1);
                     this.progress = response.progress;
@@ -4386,47 +4295,161 @@ const InsuranceChat = class {
         }
     }
     renderFormComponent() {
-        var _a, _b;
-        if (!this.currentQuestion.component)
+        if (!Array.isArray(this.currentQuestion.component) || this.currentQuestion.component.length === 0)
             return null;
-        switch (this.currentQuestion.component.type) {
-            case 'TextBox':
-                return (h("div", { class: "input-wrapper" }, h("input", { type: "text", placeholder: this.currentQuestion.component.format || this.currentQuestion.component.label, value: this.primaryValue, onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true })));
-            case 'Select':
-                return (h("div", { class: "input-wrapper" }, h("select", { onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true }, h("option", { value: "" }, "Select ", this.currentQuestion.component.label), (_a = this.currentQuestion.component.options) === null || _a === void 0 ? void 0 :
-                    _a.map(option => (h("option", { value: option, selected: this.primaryValue === option }, option))))));
-            case 'Radio':
-                return (h("div", { class: "radio-group" }, (_b = this.currentQuestion.component.options) === null || _b === void 0 ? void 0 : _b.map(option => (h("label", { class: "radio-label" }, h("input", { type: "radio", name: "radio-option", value: option, checked: this.primaryValue === option, onInput: this.handleInput }), h("span", null, option))))));
-            case 'DatePicker':
-                // const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-                const twentyYearsAgo = new Date();
-                twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
-                const max = twentyYearsAgo.toISOString().split('T')[0];
-                return (h("div", { class: "input-wrapper" }, h("input", { type: "date", max: max, value: this.primaryValue, onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true })));
-            case 'Password':
-                return (h("div", { class: "input-wrapper" }, h("input", { type: "password", placeholder: this.currentQuestion.component.label || 'Enter Password', value: this.primaryValue, onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true, minLength: 8, pattern: "(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" // Example: Regex for password strength
-                    ,
-                    title: "Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number." })));
-            case 'SSN':
-                const formatSSN = event => {
-                    let value = event.target.value.replace(/\D/g, ''); // Remove non-numeric characters
-                    if (value.length > 3 && value.length <= 5) {
-                        value = value.replace(/^(\d{3})(\d{0,2})/, '$1-$2'); // Format as ###-##
-                    }
-                    else if (value.length > 5) {
-                        value = value.replace(/^(\d{3})(\d{2})(\d{0,4})/, '$1-$2-$3'); // Format as ###-##-####
-                    }
-                    event.target.value = value; // Update the input value
-                    this.primaryValue = value; // Update the internal state
-                    this.handleInput(event); // Call the existing input handler
-                };
-                return (h("div", { class: "input-wrapper" }, h("input", { type: "text", placeholder: this.currentQuestion.component.label || 'Enter SSN', value: this.primaryValue, onInput: formatSSN, ref: el => (this.primaryInput = el), required: true, maxLength: 11, pattern: "\\d{3}-\\d{2}-\\d{4}" // Regex to enforce SSN format
-                    ,
-                    title: "SSN must be in the format ###-##-####" })));
-            default:
-                return null;
-        }
+        return this.currentQuestion.component.map((component, index) => {
+            var _a, _b;
+            switch (component.type) {
+                case 'TextBox':
+                    return (h("div", { class: "input-wrapper", key: `textbox-${index}` }, h("input", { type: "text", placeholder: component.format || component.label, value: this.primaryValue, onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true })));
+                case 'DropDown':
+                case 'Select':
+                    return (h("div", { class: "input-wrapper", key: `select-${index}` }, h("select", { onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true }, h("option", { value: "" }, "Select ", component.label), (_a = component.options) === null || _a === void 0 ? void 0 :
+                        _a.map(option => (h("option", { value: option, selected: this.primaryValue === option }, option))))));
+                case 'RadioButton':
+                case 'Radio':
+                    return (h("div", { class: "radio-group", key: `radio-${index}` }, (_b = component.options) === null || _b === void 0 ? void 0 : _b.map(option => (h("label", { class: "radio-label", key: `${option}-${index}` }, h("input", { type: "radio", name: `radio-option-${index}`, value: option, checked: this.primaryValue === option, onInput: this.handleInput }), h("span", null, option))))));
+                case 'DatePicker':
+                    const twentyYearsAgo = new Date();
+                    twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
+                    const max = twentyYearsAgo.toISOString().split('T')[0];
+                    return (h("div", { class: "input-wrapper", key: `date-picker-${index}` }, h("input", { type: "date", max: max, value: this.primaryValue, onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true })));
+                case 'Email':
+                    return (h("div", { class: "input-wrapper", key: `email-${index}` }, h("input", { type: "email", placeholder: component.label || 'Enter email address', value: this.primaryValue, onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true, pattern: "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$", title: "Please enter a valid email address" })));
+                case 'Password':
+                    return (h("div", { class: "input-wrapper", key: `password-${index}` }, h("input", { type: "password", placeholder: component.label || 'Enter Password', value: this.primaryValue, onInput: this.handleInput, ref: el => (this.primaryInput = el), required: true, minLength: 8, pattern: "(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,}", title: "Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number." })));
+                case 'SSN':
+                    const formatSSN = event => {
+                        let value = event.target.value.replace(/\D/g, '');
+                        if (value.length > 3 && value.length <= 5) {
+                            value = value.replace(/^(\d{3})(\d{0,2})/, '$1-$2');
+                        }
+                        else if (value.length > 5) {
+                            value = value.replace(/^(\d{3})(\d{2})(\d{0,4})/, '$1-$2-$3');
+                        }
+                        event.target.value = value;
+                        this.primaryValue = value;
+                        this.handleInput(event);
+                    };
+                    return (h("div", { class: "input-wrapper", key: `ssn-${index}` }, h("input", { type: "text", placeholder: component.label || 'Enter SSN', value: this.primaryValue, onInput: formatSSN, ref: el => (this.primaryInput = el), required: true, maxLength: 11, pattern: "\\d{3}-\\d{2}-\\d{4}", title: "SSN must be in the format ###-##-####" })));
+                default:
+                    return null;
+            }
+        });
     }
+    /** OLD CODE TO RENDER ONLY ONE ELEMENT */
+    // private renderFormComponent() {
+    //   if (!this.currentQuestion.component) return null;
+    //   switch (this.currentQuestion.component.type) {
+    //     case 'TextBox':
+    //       return (
+    //         <div class="input-wrapper">
+    //           <input
+    //             type="text"
+    //             placeholder={this.currentQuestion.component.format || this.currentQuestion.component.label}
+    //             value={this.primaryValue}
+    //             onInput={this.handleInput}
+    //             ref={el => (this.primaryInput = el)}
+    //             required
+    //           />
+    //         </div>
+    //       );
+    //     case 'Select':
+    //       return (
+    //         <div class="input-wrapper">
+    //           <select onInput={this.handleInput} ref={el => (this.primaryInput = el)} required>
+    //             <option value="">Select {this.currentQuestion.component.label}</option>
+    //             {this.currentQuestion.component.options?.map(option => (
+    //               <option value={option} selected={this.primaryValue === option}>
+    //                 {option}
+    //               </option>
+    //             ))}
+    //           </select>
+    //         </div>
+    //       );
+    //     case 'Radio':
+    //       return (
+    //         <div class="radio-group">
+    //           {this.currentQuestion.component.options?.map(option => (
+    //             <label class="radio-label">
+    //               <input type="radio" name="radio-option" value={option} checked={this.primaryValue === option} onInput={this.handleInput} />
+    //               <span>{option}</span>
+    //             </label>
+    //           ))}
+    //         </div>
+    //       );
+    //     case 'DatePicker':
+    //       // const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    //       const twentyYearsAgo = new Date();
+    //       twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
+    //       const max = twentyYearsAgo.toISOString().split('T')[0];
+    //       return (
+    //         <div class="input-wrapper">
+    //           <input type="date" max={max} value={this.primaryValue} onInput={this.handleInput} ref={el => (this.primaryInput = el)} required />
+    //         </div>
+    //       );
+    //     case 'Email':
+    //       return (
+    //         <div class="input-wrapper">
+    //           <input
+    //             type="email"
+    //             placeholder={this.currentQuestion.component.label || 'Enter email address'}
+    //             value={this.primaryValue}
+    //             onInput={this.handleInput}
+    //             ref={el => (this.primaryInput = el)}
+    //             required
+    //             pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+    //             title="Please enter a valid email address"
+    //           />
+    //         </div>
+    //       );
+    //     case 'Password':
+    //       return (
+    //         <div class="input-wrapper">
+    //           <input
+    //             type="password"
+    //             placeholder={this.currentQuestion.component.label || 'Enter Password'}
+    //             value={this.primaryValue}
+    //             onInput={this.handleInput}
+    //             ref={el => (this.primaryInput = el)}
+    //             required
+    //             minLength={8} // Example: Minimum length for password validation
+    //             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" // Example: Regex for password strength
+    //             title="Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number."
+    //           />
+    //         </div>
+    //       );
+    //     case 'SSN':
+    //       const formatSSN = event => {
+    //         let value = event.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+    //         if (value.length > 3 && value.length <= 5) {
+    //           value = value.replace(/^(\d{3})(\d{0,2})/, '$1-$2'); // Format as ###-##
+    //         } else if (value.length > 5) {
+    //           value = value.replace(/^(\d{3})(\d{2})(\d{0,4})/, '$1-$2-$3'); // Format as ###-##-####
+    //         }
+    //         event.target.value = value; // Update the input value
+    //         this.primaryValue = value; // Update the internal state
+    //         this.handleInput(event); // Call the existing input handler
+    //       };
+    //       return (
+    //         <div class="input-wrapper">
+    //           <input
+    //             type="text"
+    //             placeholder={this.currentQuestion.component.label || 'Enter SSN'}
+    //             value={this.primaryValue}
+    //             onInput={formatSSN}
+    //             ref={el => (this.primaryInput = el)}
+    //             required
+    //             maxLength={11} // SSN Format: ###-##-####
+    //             pattern="\d{3}-\d{2}-\d{4}" // Regex to enforce SSN format
+    //             title="SSN must be in the format ###-##-####"
+    //           />
+    //         </div>
+    //       );
+    //     default:
+    //       return null;
+    //   }
+    // }
     //masks ssn
     maskSSN(ssn) {
         if (!ssn || typeof ssn !== 'string')
@@ -4493,7 +4516,7 @@ const InsuranceChat = class {
         return (h("div", { class: "modal-overlay" }, h("div", { class: "modal-dialog" }, h("div", { class: "modal-header" }, "Edit question?"), h("div", { class: "modal-content" }, "If you do, you'll need to re-answer all questions that follow it"), h("div", { class: "modal-buttons" }, h("button", { class: "modal-button secondary", onClick: () => this.cancelEditConfirmation() }, "Cancel"), h("button", { class: "modal-button primary", onClick: () => this.confirmEdit() }, "Yes, Edit")))));
     }
     render() {
-        return (h("div", { key: 'ed859ce4a96e0c1a875e42487a6b0c1b43754131', class: "app-wrapper" }, h("div", { key: '2c75205863646d4711c5b382392629536b39053c', class: "container" }, h("app-navbar", { key: 'f9626380173f3c24e6f81ae1dfff06eb673815a0' }), h("div", { key: 'c133a93fd893ab5f36e574df5bd6c3cd18a651a7', class: "chat-interface", ref: el => (this.chatInterface = el) }, this.renderCurrentQuestion(), this.renderPreviousAnswers()), this.renderEditModal())));
+        return (h("div", { key: '47b8197caff444efc6fd3f0a099b8285ea045cdd', class: "app-wrapper" }, h("div", { key: 'd3acd5bfcf5f6288510bf0d8f986c77c089e5de0', class: "container" }, h("app-navbar", { key: 'a43f74e3896fc80d0ee28714cbb31be76e1cff91' }), h("div", { key: 'cedb4c91fad3e5ec92bf6757ee618b4568595800', class: "chat-interface", ref: el => (this.chatInterface = el) }, this.renderCurrentQuestion(), this.renderPreviousAnswers()), this.renderEditModal())));
     }
     get el() { return getElement(this); }
 };
