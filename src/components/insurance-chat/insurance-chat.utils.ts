@@ -87,11 +87,13 @@ export const startTyping = async (element: Element | null, text: string, typingS
 };
 
 /** Actually - Bedrock */
-export const getMockBedrockResponse1 = async (sessionId: string, userName: string, inquiry: string, answersLength: number = 1): Promise<BedrockResponse> => {
+export const getMockBedrockResponse1 = async (sessionId: string, inquiry: string, answersLength: number = 1): Promise<BedrockResponse> => {
   try {
     const url1 = 'https://4nm82v58i4.execute-api.us-east-1.amazonaws.com/dev/chat';
     const url2 = 'http://localhost:7000/chat2';
 
+    console.log('message to api');
+    console.log(inquiry);
     const response = await axios.post(
       url1,
       {
@@ -124,6 +126,45 @@ export const getMockBedrockResponse1 = async (sessionId: string, userName: strin
     throw error;
   }
 };
+
+export const EditMockBedrockResponse1 = async (sessionId: string, previousQuestion: string, previousAnswer: string, answersLength: number = 1): Promise<BedrockResponse> => {
+  try {
+    const response = await axios.post(
+      'http://localhost:7000/chat',
+      {
+        session_id: sessionId,
+        previousQuestion: previousQuestion,
+        previousAnswer: previousAnswer,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+    //AXIOS PUTS ENTIRE RESPONSE IN DATA
+    const data = response.data;
+    console.log('data:::::');
+    console.log(data);
+    // console.log('data:::::');
+    // console.log(data);
+
+    // const currentQuestion = data[answersLength - 1] || data[data.length - 1];
+    const currentQuestion = response.data;
+    // console.log('currentQuestion:::::');
+    // console.log(currentQuestion);
+    return {
+      text: currentQuestion.text,
+      component: currentQuestion.component,
+      dataCollected: currentQuestion.dataCollected,
+      progress: currentQuestion.progress,
+    };
+  } catch (error) {
+    console.error('Error calling NODEJS API:', error);
+    throw error;
+  }
+};
+//
 
 /** MOCK OLD API */
 // export const getMockBedrockResponse1 = async (sessionId: string, userName: string, inquiry: string, answersLength: number = 1): Promise<BedrockResponse> => {
@@ -164,38 +205,3 @@ export const getMockBedrockResponse1 = async (sessionId: string, userName: strin
 //     throw error;
 //   }
 // };
-export const EditMockBedrockResponse1 = async (sessionId: string, previousQuestion: string, previousAnswer: string, answersLength: number = 1): Promise<BedrockResponse> => {
-  try {
-    const response = await axios.post(
-      'http://localhost:7000/chat',
-      {
-        session_id: sessionId,
-        previousQuestion: previousQuestion,
-        previousAnswer: previousAnswer,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-    //AXIOS PUTS ENTIRE RESPONSE IN DATA
-    const data = response.data;
-    // console.log('data:::::');
-    // console.log(data);
-
-    const currentQuestion = data[answersLength - 1] || data[data.length - 1];
-    // console.log('currentQuestion:::::');
-    // console.log(currentQuestion);
-    return {
-      text: currentQuestion.text,
-      component: currentQuestion.component,
-      dataCollected: currentQuestion.dataCollected,
-      progress: currentQuestion.progress,
-    };
-  } catch (error) {
-    console.error('Error calling NODEJS API:', error);
-    throw error;
-  }
-};
-//

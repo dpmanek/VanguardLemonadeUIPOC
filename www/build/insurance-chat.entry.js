@@ -3882,10 +3882,12 @@ const startTyping = async (element, text, typingSpeed, typingDelay) => {
     });
 };
 /** Actually - Bedrock */
-const getMockBedrockResponse1 = async (sessionId, userName, inquiry, answersLength = 1) => {
+const getMockBedrockResponse1 = async (sessionId, inquiry, answersLength = 1) => {
     try {
         const url1 = 'https://4nm82v58i4.execute-api.us-east-1.amazonaws.com/dev/chat';
         const url2 = 'http://localhost:7000/chat2';
+        console.log('message to api');
+        console.log(inquiry);
         const response = await axios.post(url1, {
             session_id: sessionId,
             message: `${inquiry}`,
@@ -3914,6 +3916,40 @@ const getMockBedrockResponse1 = async (sessionId, userName, inquiry, answersLeng
         throw error;
     }
 };
+const EditMockBedrockResponse1 = async (sessionId, previousQuestion, previousAnswer, answersLength = 1) => {
+    try {
+        const response = await axios.post('http://localhost:7000/chat', {
+            session_id: sessionId,
+            previousQuestion: previousQuestion,
+            previousAnswer: previousAnswer,
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        //AXIOS PUTS ENTIRE RESPONSE IN DATA
+        const data = response.data;
+        console.log('data:::::');
+        console.log(data);
+        // console.log('data:::::');
+        // console.log(data);
+        // const currentQuestion = data[answersLength - 1] || data[data.length - 1];
+        const currentQuestion = response.data;
+        // console.log('currentQuestion:::::');
+        // console.log(currentQuestion);
+        return {
+            text: currentQuestion.text,
+            component: currentQuestion.component,
+            dataCollected: currentQuestion.dataCollected,
+            progress: currentQuestion.progress,
+        };
+    }
+    catch (error) {
+        console.error('Error calling NODEJS API:', error);
+        throw error;
+    }
+};
+//
 /** MOCK OLD API */
 // export const getMockBedrockResponse1 = async (sessionId: string, userName: string, inquiry: string, answersLength: number = 1): Promise<BedrockResponse> => {
 //   try {
@@ -3952,44 +3988,13 @@ const getMockBedrockResponse1 = async (sessionId, userName, inquiry, answersLeng
 //     throw error;
 //   }
 // };
-const EditMockBedrockResponse1 = async (sessionId, previousQuestion, previousAnswer, answersLength = 1) => {
-    try {
-        const response = await axios.post('http://localhost:7000/chat', {
-            session_id: sessionId,
-            previousQuestion: previousQuestion,
-            previousAnswer: previousAnswer,
-        }, {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        //AXIOS PUTS ENTIRE RESPONSE IN DATA
-        const data = response.data;
-        // console.log('data:::::');
-        // console.log(data);
-        const currentQuestion = data[answersLength - 1] || data[data.length - 1];
-        // console.log('currentQuestion:::::');
-        // console.log(currentQuestion);
-        return {
-            text: currentQuestion.text,
-            component: currentQuestion.component,
-            dataCollected: currentQuestion.dataCollected,
-            progress: currentQuestion.progress,
-        };
-    }
-    catch (error) {
-        console.error('Error calling NODEJS API:', error);
-        throw error;
-    }
-};
-//
 
 const insuranceChatCss = ".app-wrapper{min-height:100vh;display:flex;flex-direction:column}.container{display:flex;justify-content:center;flex:1;background:#fff;padding:76px 20px 20px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;user-select:none;overflow:hidden}.chat-interface{width:100%;max-width:600px;margin:0;padding:20px;overflow-y:auto;max-height:calc(100vh - 96px);position:relative;scroll-behavior:smooth;display:flex;flex-direction:column-reverse;justify-content:flex-start;background:#fff;gap:16px}.typing-indicator{display:flex;align-items:center;gap:4px;padding:10px 0}.typing-indicator span{width:8px;height:8px;background-color:#96151d;border-radius:50%;animation:bounce 1.4s infinite ease-in-out}.typing-indicator span:nth-child(1){animation-delay:-0.32s}.typing-indicator span:nth-child(2){animation-delay:-0.16s}.typing-indicator span:nth-child(3){animation-delay:0s}@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-8px)}}.form-container{display:flex;flex-direction:column;gap:10px;width:100%}.form-container.address{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px}.form-container.address .input-wrapper:first-child{grid-column:1 / -1}.form-container.security-questions{display:flex;flex-direction:column;gap:20px}.form-container.security-questions .question-pair-0,.form-container.security-questions .question-pair-1,.form-container.security-questions .question-pair-2{display:flex;flex-direction:column;gap:10px}.form-container.default{display:flex;flex-direction:column;gap:10px}.chat-interface::-webkit-scrollbar{width:6px}.chat-interface::-webkit-scrollbar-track{background:transparent}.chat-interface::-webkit-scrollbar-thumb{background:#fff;border-radius:3px}.previous-page{display:flex;flex-direction:column;gap:16px;padding-bottom:32px;margin-bottom:32px;border-bottom:1px solid #e0e0e0;opacity:0.7;transition:opacity 0.3s ease}.previous-page:hover{opacity:1}.current-page{display:flex;flex-direction:column;gap:16px;padding-top:16px;position:relative;background:#fff}.current-page::before{content:'';position:absolute;top:-20px;left:0;right:0;height:20px;background:linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);pointer-events:none}@keyframes slideUp{from{transform:translateY(20px)}to{transform:translateY(0)}}.previous-answer{display:flex;flex-direction:column;flex:0 0 auto;}.previous-answer{text-align:left;padding:0;position:relative;min-height:60px;background:#fff;animation:slideUp 0.3s ease-out forwards;opacity:1;transition:opacity 0.3s ease, transform 0.3s ease, height 0.3s ease, margin 0.3s ease}.previous-answer.hidden{opacity:0;transform:translateY(-20px);height:0;margin:0;padding:0;overflow:hidden;pointer-events:none}.current-question{opacity:1;transform:translateY(0);transition:opacity 0.3s ease, transform 0.3s ease}.current-question{display:flex;gap:12px;min-height:60px;max-width:500px;position:relative;opacity:0;animation:fadeInStatic 0.3s ease-out forwards;background:#fff;padding-bottom:calc(100vh - 40%);margin-top:10px}.answer-header{font-size:16px;margin-bottom:8px;color:#949494;font-weight:600}.answer-content{font-size:15px;color:#4a4a4a;font-weight:600;line-height:1.5;display:flex;justify-content:space-between;align-items:center;gap:20px}.edit-button{background:transparent;color:#666;min-width:auto;padding:4px;font-size:12px;width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;position:absolute;right:-24px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:0;transition:opacity 0.2s ease}.previous-answer:hover .edit-button{opacity:1}.edit-button:hover:not(:disabled){background:#f0f0f0}.edit-button::before{content:'';display:block;width:16px;height:16px;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'%3E%3C/path%3E%3C/svg%3E\");background-size:contain;background-repeat:no-repeat}.edit-input{flex:1;min-width:160px;padding:4px 8px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px}.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0, 0, 0, 0.5);display:flex;justify-content:center;align-items:center;z-index:1000;animation:fadeIn 0.2s ease-out}.modal-dialog{background:white;border-radius:12px;padding:24px;width:90%;max-width:400px;box-shadow:0 4px 20px rgba(0, 0, 0, 0.15);animation:slideIn 0.3s ease-out}.modal-header{font-size:18px;font-weight:500;color:#2d2d2d;margin-bottom:16px;text-align:center}.modal-content{font-size:14px;color:#666;margin-bottom:24px;text-align:center;line-height:1.5}.modal-buttons{display:flex;gap:12px;justify-content:center}.modal-button{flex:1;max-width:120px;height:40px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s ease}.modal-button.primary{background:#c20029;color:white;border:none}.modal-button.secondary{background:transparent;color:#2d2d2d;border:1px solid #e0e0e0}.modal-button:hover{opacity:0.9}@keyframes slideIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeInStatic{0%{opacity:0}100%{opacity:1}}.avatar{width:35px;height:35px;border-radius:50%;overflow:hidden;flex-shrink:0}.avatar img{width:100%;height:100%;object-fit:cover}.question-content{flex:1;background:#fff}.question-text{font-size:16px;color:#666;margin-bottom:16px;line-height:1.5;font-weight:400;min-height:20px}.typed-cursor{display:none}.question-form{opacity:0;transform:translateY(10px);transition:all 0.3s ease;pointer-events:none;background:#fff}.question-form.visible{opacity:1;transform:translateY(0);pointer-events:all}.input-group{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;max-width:400px}.input-groupName{display:flex;gap:8px;margin-bottom:12px;max-width:400px}.input-wrapper{flex:1;display:flex;gap:4px}input,select{border:1px solid #e0e0e0;border-radius:6px;font-size:14px;color:#2d2d2d;background:#fff;transition:all 0.2s ease;height:36px;padding:0 12px;cursor:text;appearance:none;-webkit-appearance:none}input[type='text']{width:180px}input[type='date']{width:140px;padding-right:32px;color:#96151d}input[type='date']::-webkit-calendar-picker-indicator{background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2396151D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E\");background-size:16px;cursor:pointer;filter:opacity(0.8)}input[type='date']::-webkit-datetime-edit{color:#96151d}input[type='date']::-webkit-datetime-edit-fields-wrapper{color:#96151d}input[type='date']::-webkit-datetime-edit-text{color:#96151d;padding:0 2px}input[type='date']::-webkit-datetime-edit-month-field,input[type='date']::-webkit-datetime-edit-day-field,input[type='date']::-webkit-datetime-edit-year-field{color:#96151d}input[type='date']::-webkit-inner-spin-button{display:none}select{width:100%;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 8px center;background-size:16px;padding-right:32px;cursor:pointer}.radio-group{display:flex;gap:12px;flex-wrap:wrap}.radio-label{position:relative;flex:0 1 auto;}.radio-label input[type='radio']{position:absolute;opacity:0;width:0;height:0}.radio-label span{display:inline-block;padding:0 16px;font-size:14px;color:#2d2d2d;background:#fff;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;transition:all 0.2s ease;height:36px;line-height:36px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;}.radio-label input[type='radio']:checked+span{background:#96151d;color:#fff;border-color:#96151d}.radio-label:hover span{border-color:#96151d}input::placeholder,select::placeholder{color:#999}input:focus,select:focus{outline:none;border-color:#96151d;box-shadow:0 0 0 1px rgba(150, 21, 29, 0.1)}.validation-error{color:#dc3545;font-size:12px;margin-top:4px;animation:fadeIn 0.3s ease-out}button{display:inline-flex;align-items:center;justify-content:center;min-width:100px;padding:12px 32px;background-color:#c20029;color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s ease;height:48px}button:hover:not(:disabled){background-color:#a30022}button:disabled{background-color:#f5f5f5;color:#999;cursor:not-allowed}.progress-bar{margin-top:20px;height:2px;background-color:#f0f0f0;border-radius:1px;overflow:hidden}.progress{height:100%;background-color:#96151d;transition:width 0.3s ease-in-out}input[type='number']::-webkit-inner-spin-button,input[type='number']::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}input[type='number']{-moz-appearance:textfield}@media (max-width: 480px){.chat-interface{padding:16px}.input-group{flex-direction:column}.question-text{font-size:15px}.answer-header{font-size:15px}button{width:100%}.modal-dialog{width:calc(100% - 32px);padding:20px}.radio-group{width:100%;justify-content:space-between}.radio-label span{width:100%;text-align:center}}";
 
 const InsuranceChat = class {
     constructor(hostRef) {
         registerInstance(this, hostRef);
-        this.typingSpeed = 5;
+        this.typingSpeed = 0;
         this.typingDelay = 500;
         this.initialQuestion = "Let's begin! What's your name?";
         this.handleFirstNameInput = (e) => {
@@ -4208,7 +4213,8 @@ const InsuranceChat = class {
                 console.log('previousQuestion::::' + previousQuestion);
                 console.log('previousAnswer::::' + previousAnswer);
                 console.log('Type::::' + previousQuestionType);
-                const mockResponse = await getMockBedrockResponse1(this.sessionId, this.userName, previousAnswer, index);
+                // const mockResponse = await getMockBedrockResponse1(this.sessionId, previousAnswer, index);
+                const mockResponse = await EditMockBedrockResponse1(this.sessionId, previousAnswer, previousQuestion, index);
                 // console.log('mockResponse::::');
                 // console.log(mockResponse);
                 // Set progress based on the current position in the conversation
@@ -4293,7 +4299,7 @@ const InsuranceChat = class {
                 this.firstName = '';
                 this.lastName = '';
                 try {
-                    const response = await getMockBedrockResponse1(this.sessionId, ' ', `Hi I am ${this.userName}`, 1);
+                    const response = await getMockBedrockResponse1(this.sessionId, `Hi I am ${this.userName}`, 1);
                     this.progress = response.progress;
                     this.currentQuestion = {
                         text: response.text,
@@ -4326,7 +4332,7 @@ const InsuranceChat = class {
                     this.observer.observe(newAnswer);
                 }
             }, 0);
-            const response = await getMockBedrockResponse1(this.sessionId, this.userName, formattedAnswer, this.answers.length);
+            const response = await getMockBedrockResponse1(this.sessionId, formattedAnswer, this.answers.length);
             this.progress = response.progress;
             this.currentQuestion = {
                 text: response.text,
@@ -5093,7 +5099,7 @@ const InsuranceChat = class {
         return (h("div", { class: "modal-overlay" }, h("div", { class: "modal-dialog" }, h("div", { class: "modal-header" }, "Edit question?"), h("div", { class: "modal-content" }, "If you do, you'll need to re-answer all questions that follow it"), h("div", { class: "modal-buttons" }, h("button", { class: "modal-button secondary", onClick: () => this.cancelEditConfirmation() }, "Cancel"), h("button", { class: "modal-button primary", onClick: () => this.confirmEdit() }, "Yes, Edit")))));
     }
     render() {
-        return (h("div", { key: 'b398c73e07373bb3c474c58d95f1b8486eba49d4', class: "app-wrapper" }, h("div", { key: 'f1d1e9e0437d547fd6b4eb040b8c13b69c6f8a71', class: "container" }, h("app-navbar", { key: 'c1cf025b194f5373ec7daf4309cbc78a35701d56' }), h("div", { key: '711ee591ef270597a39e510565f4a0ff8d6245ec', class: "chat-interface", ref: el => (this.chatInterface = el) }, this.renderCurrentQuestion(), this.renderPreviousAnswers()), this.renderEditModal())));
+        return (h("div", { key: 'c52a770d5f1a46cd0662a7cf6317b0fd77bb7c8e', class: "app-wrapper" }, h("div", { key: 'cbdfa6425c22cdb3f22d0d269d8cc230a54806a7', class: "container" }, h("app-navbar", { key: 'c357c08e817003810ba87f979af927858516def9' }), h("div", { key: '064cc24c55d2593fb490c4c4c5a172c133984f94', class: "chat-interface", ref: el => (this.chatInterface = el) }, this.renderCurrentQuestion(), this.renderPreviousAnswers()), this.renderEditModal())));
     }
     get el() { return getElement(this); }
 };

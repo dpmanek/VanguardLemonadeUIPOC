@@ -1,7 +1,7 @@
 import { Component, State, Element, h } from '@stencil/core';
 import Typed from 'typed.js';
 // import { ValidationRule, FormComponent, BedrockResponse, validateInput, startTyping, getMockBedrockResponse } from './insurance-chat.utils';
-import { ValidationRule, FormComponent, BedrockResponse, validateInput, startTyping, getMockBedrockResponse1 } from './insurance-chat.utils';
+import { ValidationRule, FormComponent, BedrockResponse, validateInput, startTyping, getMockBedrockResponse1, EditMockBedrockResponse1 } from './insurance-chat.utils';
 
 @Component({
   tag: 'insurance-chat',
@@ -34,7 +34,7 @@ export class InsuranceChat {
   @State() inputValues: { [key: string]: string } = {}; // Multiple
 
   private typed: Typed;
-  private typingSpeed: number = 5;
+  private typingSpeed: number = 0;
   private typingDelay: number = 500;
   private firstNameInput: HTMLInputElement;
   private primaryInput: HTMLInputElement | HTMLSelectElement;
@@ -271,7 +271,8 @@ export class InsuranceChat {
         console.log('previousQuestion::::' + previousQuestion);
         console.log('previousAnswer::::' + previousAnswer);
         console.log('Type::::' + previousQuestionType);
-        const mockResponse = await getMockBedrockResponse1(this.sessionId, this.userName, previousAnswer, index);
+        // const mockResponse = await getMockBedrockResponse1(this.sessionId, previousAnswer, index);
+        const mockResponse = await EditMockBedrockResponse1(this.sessionId, previousAnswer, previousQuestion, index);
         // console.log('mockResponse::::');
         // console.log(mockResponse);
         // Set progress based on the current position in the conversation
@@ -362,7 +363,7 @@ export class InsuranceChat {
         this.lastName = '';
 
         try {
-          const response = await getMockBedrockResponse1(this.sessionId, ' ', `Hi I am ${this.userName}`, 1);
+          const response = await getMockBedrockResponse1(this.sessionId, `Hi I am ${this.userName}`, 1);
           this.progress = response.progress;
           this.currentQuestion = {
             text: response.text,
@@ -399,7 +400,7 @@ export class InsuranceChat {
         }
       }, 0);
 
-      const response = await getMockBedrockResponse1(this.sessionId, this.userName, formattedAnswer, this.answers.length);
+      const response = await getMockBedrockResponse1(this.sessionId, formattedAnswer, this.answers.length);
       this.progress = response.progress;
       this.currentQuestion = {
         text: response.text,
