@@ -3825,6 +3825,12 @@ const {
   mergeConfig
 } = axios;
 
+const generateSessionId = () => {
+    const timestamp = Date.now();
+    // const randomStr = Math.random().toString(36).substring(2, 8);
+    // return `session-${timestamp}-${randomStr}`;
+    return `session-${timestamp}`;
+};
 //old code
 // export const validateInput = (value: string, rules?: ValidationRule[]): string => {
 //   if (!rules) return '';
@@ -3904,11 +3910,14 @@ const getMockBedrockResponse1 = async (sessionId, inquiry, answersLength = 1) =>
         const currentQuestion = response.data;
         // console.log('currentQuestion:::::');
         // console.log(currentQuestion);
+        const progressValue = parseInt(data.progress, 10);
+        console.log('progressValue:::::');
+        console.log(progressValue);
         return {
             text: currentQuestion.text,
             component: currentQuestion.component,
             dataCollected: currentQuestion.data,
-            progress: currentQuestion.progress,
+            progress: progressValue,
         };
     }
     catch (error) {
@@ -3918,10 +3927,16 @@ const getMockBedrockResponse1 = async (sessionId, inquiry, answersLength = 1) =>
 };
 const EditMockBedrockResponse1 = async (sessionId, previousQuestion, previousAnswer, answersLength = 1) => {
     try {
-        const response = await axios.post('http://localhost:7000/chat', {
+        console.log('Sending Edit Request');
+        console.log('previousQuestion:::::');
+        console.log(previousQuestion);
+        console.log('previousAnswer:::::');
+        console.log(previousAnswer);
+        const response = await axios.post('https://4nm82v58i4.execute-api.us-east-1.amazonaws.com/dev/chat', {
             session_id: sessionId,
-            previousQuestion: previousQuestion,
-            previousAnswer: previousAnswer,
+            message: `Previous question: ${previousQuestion}. Previous answer: ${previousAnswer}. Reset all information after this field in the flow. No confirmation required.`,
+            // previousQuestion: `${previousQuestion}`,
+            // previousAnswer: `${previousAnswer}. Reset all information after this field in the flow. No confirmation required.`,
         }, {
             headers: {
                 'Content-Type': 'application/json',
@@ -3937,11 +3952,14 @@ const EditMockBedrockResponse1 = async (sessionId, previousQuestion, previousAns
         const currentQuestion = response.data;
         // console.log('currentQuestion:::::');
         // console.log(currentQuestion);
+        const progressValue = parseInt(data.progress, 10);
+        console.log('progressValue:::::');
+        console.log(progressValue);
         return {
             text: currentQuestion.text,
             component: currentQuestion.component,
             dataCollected: currentQuestion.dataCollected,
-            progress: currentQuestion.progress,
+            progress: progressValue,
         };
     }
     catch (error) {
@@ -4042,7 +4060,7 @@ const InsuranceChat = class {
         });
     }
     componentWillLoad() {
-        this.sessionId = `test-1234`;
+        this.sessionId = generateSessionId();
         this.currentQuestion = {
             text: this.initialQuestion,
             component: {
@@ -4160,14 +4178,14 @@ const InsuranceChat = class {
             this.primaryValue = '';
             this.validationError = '';
             this.showForm = false; // Hide form while typing animation plays
-            this.isLoading = false; // Reset loading state
+            this.isLoading = true; // Reset loading state
             if (index === 0) {
                 // Reset everything for name edit
                 this.userName = '';
                 this.firstName = '';
                 this.lastName = '';
                 this.progress = 0;
-                this.sessionId = `test-1234`;
+                // this.sessionId = `test-12345i`; // so that session id remains same
                 // Set current question
                 this.currentQuestion = {
                     text: this.initialQuestion,
@@ -4186,24 +4204,6 @@ const InsuranceChat = class {
                 await new Promise(resolve => setTimeout(resolve, 0));
                 await this.initializeTyping(this.initialQuestion);
             }
-            else if (index === 1) {
-                // Editing "how may I help you" question
-                this.progress = 20;
-                this.currentQuestion = {
-                    text: `Hi ${this.userName}, how may I help you today?`,
-                    component: {
-                        type: 'TextBox',
-                        label: 'How can we help?',
-                        validationRules: [
-                            {
-                                type: 'Required',
-                                message: 'Please let us know how we can help',
-                            },
-                        ],
-                    },
-                };
-                await this.initializeTyping(this.currentQuestion.text);
-            }
             else {
                 // Get the previous answer to maintain context //editting the previous answer
                 console.log('index::::' + index);
@@ -4214,7 +4214,7 @@ const InsuranceChat = class {
                 console.log('previousAnswer::::' + previousAnswer);
                 console.log('Type::::' + previousQuestionType);
                 // const mockResponse = await getMockBedrockResponse1(this.sessionId, previousAnswer, index);
-                const mockResponse = await EditMockBedrockResponse1(this.sessionId, previousAnswer, previousQuestion, index);
+                const mockResponse = await EditMockBedrockResponse1(this.sessionId, previousQuestion, previousAnswer, index);
                 // console.log('mockResponse::::');
                 // console.log(mockResponse);
                 // Set progress based on the current position in the conversation
@@ -4237,7 +4237,7 @@ const InsuranceChat = class {
     }
     //typing edit for handle submit
     async handleSubmit(e) {
-        var _a, _b, _c;
+        var _a, _b;
         e.preventDefault();
         if (!this.userName && (!this.firstName.trim() || !this.lastName.trim())) {
             this.validationError = 'Please enter both first and last name';
@@ -4318,12 +4318,20 @@ const InsuranceChat = class {
             const formattedAnswer = Array.isArray(this.currentQuestion.component)
                 ? this.currentQuestion.component.map((_, index) => this.inputValues[`component-${index}`]).join(', ')
                 : this.inputValues['component-0'];
+            // const answer = {
+            //   question: this.currentQuestion.text,
+            //   answer: formattedAnswer,
+            //   type: Array.isArray(this.currentQuestion.component)
+            //     ? this.currentQuestion.component.find(comp => comp.type === 'Password')?.type || this.currentQuestion.component[0].type
+            //     : this.currentQuestion.component.type,
+            // };
+            // In handleSubmit:
             const answer = {
                 question: this.currentQuestion.text,
                 answer: formattedAnswer,
                 type: Array.isArray(this.currentQuestion.component)
-                    ? ((_c = this.currentQuestion.component.find(comp => comp.type === 'Password')) === null || _c === void 0 ? void 0 : _c.type) || this.currentQuestion.component[0].type
-                    : this.currentQuestion.component.type,
+                    ? this.currentQuestion.component.map(comp => comp.type).join(',') // Store as "TextBox,Password,SSN"
+                    : this.currentQuestion.component.type, // Store as single type e.g. "Password"
             };
             this.answers = [...this.answers, answer];
             setTimeout(() => {
@@ -4889,29 +4897,75 @@ const InsuranceChat = class {
             return '';
         return '*'.repeat(password.length); // Replace each character with '*'
     }
+    // private renderPreviousAnswers() {
+    //   const reversedAnswers = [...this.answers].reverse();
+    //   return reversedAnswers.map((answer, index) => {
+    //     const originalIndex = this.answers.length - 1 - index;
+    //     let displayAnswer = answer.answer.toString();
+    //     // If answer contains multiple parts (comma-separated)
+    //     if (displayAnswer.includes(', ')) {
+    //       const parts = displayAnswer.split(', ');
+    //       const types = Array.isArray(this.currentQuestion.component) ? this.currentQuestion.component.map(comp => comp.type) : [this.currentQuestion.component?.type];
+    //       displayAnswer = parts
+    //         .map((part, i) => {
+    //           // Only mask if the type is specifically SSN or Password
+    //           if (types[i] === 'SSN') {
+    //             return this.maskSSN(part);
+    //           } else if (types[i] === 'Password') {
+    //             return this.maskPassword(part);
+    //           }
+    //           return part; // Leave all other parts unchanged
+    //         })
+    //         .join(', ');
+    //     } else {
+    //       // Single answer - mask only if type is SSN or Password
+    //       if (answer.type === 'SSN') {
+    //         displayAnswer = this.maskSSN(displayAnswer);
+    //       } else if (answer.type === 'Password') {
+    //         displayAnswer = this.maskPassword(displayAnswer);
+    //       }
+    //     }
+    //     return (
+    //       <div class="previous-answer" key={originalIndex}>
+    //         <div class="answer-header">{answer.question}</div>
+    //         <div class="answer-content">
+    //           <span>{displayAnswer}</span>
+    //           <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
+    //         </div>
+    //       </div>
+    //     );
+    //   });
+    // }
     renderPreviousAnswers() {
         const reversedAnswers = [...this.answers].reverse();
         return reversedAnswers.map((answer, index) => {
             const originalIndex = this.answers.length - 1 - index;
-            // Handle comma-separated answers
-            const displayAnswer = answer.answer
-                .toString()
-                .split(', ')
-                .map((part, partIndex) => {
-                var _a;
-                // Check if this part should be masked based on component type
-                if (Array.isArray(this.currentQuestion.component)) {
-                    const componentType = (_a = this.currentQuestion.component[partIndex]) === null || _a === void 0 ? void 0 : _a.type;
-                    if (componentType === 'Password') {
-                        return this.maskPassword(part);
-                    }
-                    if (componentType === 'SSN') {
+            let displayAnswer = answer.answer.toString();
+            // If answer contains multiple parts (comma-separated)
+            if (displayAnswer.includes(', ')) {
+                const parts = displayAnswer.split(', ');
+                const types = answer.type.split(','); // Split "TextBox,Password,SSN" into ["TextBox", "Password", "SSN"]
+                displayAnswer = parts
+                    .map((part, i) => {
+                    if (types[i] === 'SSN') {
                         return this.maskSSN(part);
                     }
+                    else if (types[i] === 'Password') {
+                        return this.maskPassword(part);
+                    }
+                    return part;
+                })
+                    .join(', ');
+            }
+            else {
+                // Single answer - mask only if type is SSN or Password
+                if (answer.type === 'SSN') {
+                    displayAnswer = this.maskSSN(displayAnswer);
                 }
-                return part;
-            })
-                .join(', ');
+                else if (answer.type === 'Password') {
+                    displayAnswer = this.maskPassword(displayAnswer);
+                }
+            }
             return (h("div", { class: "previous-answer", key: originalIndex }, h("div", { class: "answer-header" }, answer.question), h("div", { class: "answer-content" }, h("span", null, displayAnswer), h("button", { class: "edit-button", onClick: () => this.showEditConfirmation(originalIndex), "aria-label": "Edit answer" }))));
         });
     }
@@ -4919,78 +4973,47 @@ const InsuranceChat = class {
     //   const reversedAnswers = [...this.answers].reverse();
     //   return reversedAnswers.map((answer, index) => {
     //     const originalIndex = this.answers.length - 1 - index;
-    //     const isPassword = answer.type === 'Password'; // Direct type check
+    //     // Handle comma-separated answers
+    //     const displayAnswer = answer.answer
+    //       .toString()
+    //       .split(', ')
+    //       .map((part, partIndex) => {
+    //         // Check if this part should be masked based on component type
+    //         if (Array.isArray(this.currentQuestion.component)) {
+    //           const componentType = this.currentQuestion.component[partIndex]?.type;
+    //           if (componentType === 'Password') {
+    //             return this.maskPassword(part);
+    //           }
+    //           if (componentType === 'SSN') {
+    //             return this.maskSSN(part);
+    //           }
+    //         }
+    //         return part;
+    //       })
+    //       .join(', ');
+    //     // let displayAnswer = answer.answer.toString();
+    //     // // Check the answer type directly
+    //     // if (answer.type === 'Password') {
+    //     //   displayAnswer = this.maskPassword(displayAnswer);
+    //     // } else if (answer.type === 'SSN') {
+    //     //   displayAnswer = this.maskSSN(displayAnswer);
+    //     // }
     //     return (
     //       <div class="previous-answer" key={originalIndex}>
     //         <div class="answer-header">{answer.question}</div>
     //         <div class="answer-content">
-    //           <span>
-    //             {isPassword
-    //               ? this.maskPassword(answer.answer.toString())
-    //               : /\bssn\b/i.test(answer.type.toLowerCase())
-    //               ? this.maskSSN(answer.answer.toString())
-    //               : typeof answer.answer === 'string'
-    //               ? answer.answer
-    //               : JSON.stringify(answer.answer)}
-    //           </span>
+    //           <span>{displayAnswer}</span>
     //           <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
     //         </div>
     //       </div>
     //     );
     //   });
-    // }
-    /*This will reverse the previous ans*/
-    // private renderPreviousAnswers() {
-    //   // Create a copy of answers array and reverse it
-    //   const reversedAnswers = [...this.answers].reverse();
-    //   return reversedAnswers.map((answer, index) => {
-    //     // Calculate the original index for edit functionality
-    //     const originalIndex = this.answers.length - 1 - index;
-    //     return (
-    //       <div class="previous-answer" key={originalIndex}>
-    //         <div class="answer-header">{answer.question}</div>
-    //         <div class="answer-content">
-    //           <span>
-    //             {/\bpassword\b/i.test(answer.type.toLowerCase())
-    //               ? this.maskPassword(answer.answer.toString())
-    //               : /\bssn\b/i.test(answer.type.toLowerCase())
-    //               ? this.maskSSN(answer.answer.toString())
-    //               : typeof answer.answer === 'string'
-    //               ? answer.answer
-    //               : JSON.stringify(answer.answer)}
-    //           </span>
-    //           <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
-    //         </div>
-    //       </div>
-    //     );
-    //   });
-    // }
-    // private renderPreviousAnswers() {
-    //   return this.answers.map((answer, index) => (
-    //     <div class="previous-answer" key={index}>
-    //       <div class="answer-header">{answer.question}</div>
-    //       <div class="answer-content">
-    //         <span>
-    //           {/\bpassword\b/i.test(answer.type)
-    //             ? this.maskPassword(answer.answer.toString()) // Mask passwords completely
-    //             : /\bssn\b/i.test(answer.type)
-    //             ? this.maskSSN(answer.answer.toString()) // Mask SSNs
-    //             : typeof answer.answer === 'string'
-    //             ? answer.answer
-    //             : JSON.stringify(answer.answer)}
-    //         </span>
-    //         {/* <span>{/\bpassword\b/i.test(answer.question) ? '******' : typeof answer.answer === 'string' ? answer.answer : JSON.stringify(answer.answer)}</span> */}
-    //         {/* <span>{typeof answer.answer === 'string' ? answer.answer : JSON.stringify(answer.answer)}</span> */}
-    //         <button class="edit-button" onClick={() => this.showEditConfirmation(index)} aria-label="Edit answer"></button>
-    //       </div>
-    //     </div>
-    //   ));
     // }
     renderCurrentQuestion() {
         var _a;
         if (!this.currentQuestion)
             return null;
-        return (h("div", { class: "current-question" }, h("div", { class: "avatar" }, h("img", { src: "/assets/image/Bot Avatar.png", alt: "Agent avatar" })), h("div", { class: "question-content" }, h("div", { class: "question-text", style: { display: this.isLoading ? 'none' : 'block' } }), this.isLoading && (h("div", { class: "typing-indicator" }, h("span", null), h("span", null), h("span", null))), !this.isLoading && this.currentQuestion.component && this.showForm && (h("form", { onSubmit: e => this.handleSubmit(e), class: "question-form visible" }, h("div", { class: "input-groupName" }, !this.userName
+        return (h("div", { class: "current-question" }, h("div", { class: "avatar" }, h("img", { src: "/assets/image/Bot Avatar 2.png", alt: "Agent avatar" })), h("div", { class: "question-content" }, h("div", { class: "question-text", style: { display: this.isLoading ? 'none' : 'block' } }), this.isLoading && (h("div", { class: "typing-indicator" }, h("span", null), h("span", null), h("span", null))), !this.isLoading && this.currentQuestion.component && this.showForm && (h("form", { onSubmit: e => this.handleSubmit(e), class: "question-form visible" }, h("div", { class: "input-groupName" }, !this.userName
             ? [
                 h("div", { class: "input-wrapper" }, h("input", { type: "text", placeholder: "First name", value: this.firstName, onInput: this.handleFirstNameInput, ref: el => (this.firstNameInput = el), required: true })),
                 h("div", { class: "input-wrapper" }, h("input", { type: "text", placeholder: "Last name", value: this.lastName, onInput: this.handleLastNameInput, required: true })),
@@ -5099,7 +5122,7 @@ const InsuranceChat = class {
         return (h("div", { class: "modal-overlay" }, h("div", { class: "modal-dialog" }, h("div", { class: "modal-header" }, "Edit question?"), h("div", { class: "modal-content" }, "If you do, you'll need to re-answer all questions that follow it"), h("div", { class: "modal-buttons" }, h("button", { class: "modal-button secondary", onClick: () => this.cancelEditConfirmation() }, "Cancel"), h("button", { class: "modal-button primary", onClick: () => this.confirmEdit() }, "Yes, Edit")))));
     }
     render() {
-        return (h("div", { key: 'c52a770d5f1a46cd0662a7cf6317b0fd77bb7c8e', class: "app-wrapper" }, h("div", { key: 'cbdfa6425c22cdb3f22d0d269d8cc230a54806a7', class: "container" }, h("app-navbar", { key: 'c357c08e817003810ba87f979af927858516def9' }), h("div", { key: '064cc24c55d2593fb490c4c4c5a172c133984f94', class: "chat-interface", ref: el => (this.chatInterface = el) }, this.renderCurrentQuestion(), this.renderPreviousAnswers()), this.renderEditModal())));
+        return (h("div", { key: '552271188f1e6cc8da64214ccc88e0a8e4b07ddd', class: "app-wrapper" }, h("div", { key: 'daf2e0d0eddf432749947476e0dff891c4ea523b', class: "container" }, h("app-navbar", { key: '5b00bba33bd26d7c65e73d82e2d07da6b660c97b' }), h("div", { key: '2de0b38948db2bf06d4bba081f582092beefce87', class: "chat-interface", ref: el => (this.chatInterface = el) }, this.renderCurrentQuestion(), this.renderPreviousAnswers()), this.renderEditModal())));
     }
     get el() { return getElement(this); }
 };

@@ -1,7 +1,22 @@
 import { Component, State, Element, h } from '@stencil/core';
 import Typed from 'typed.js';
 // import { ValidationRule, FormComponent, BedrockResponse, validateInput, startTyping, getMockBedrockResponse } from './insurance-chat.utils';
-import { ValidationRule, FormComponent, BedrockResponse, validateInput, startTyping, getMockBedrockResponse1, EditMockBedrockResponse1 } from './insurance-chat.utils';
+import {
+  ValidationRule,
+  FormComponent,
+  BedrockResponse,
+  validateInput,
+  startTyping,
+  getMockBedrockResponse1,
+  EditMockBedrockResponse1,
+  generateSessionId,
+} from './insurance-chat.utils';
+
+interface ChatAnswer {
+  question: string;
+  answer: string;
+  type: string;
+}
 
 @Component({
   tag: 'insurance-chat',
@@ -54,7 +69,7 @@ export class InsuranceChat {
   }
 
   componentWillLoad() {
-    this.sessionId = `test-1234`;
+    this.sessionId = generateSessionId();
     this.currentQuestion = {
       text: this.initialQuestion,
       component: {
@@ -217,7 +232,7 @@ export class InsuranceChat {
       this.primaryValue = '';
       this.validationError = '';
       this.showForm = false; // Hide form while typing animation plays
-      this.isLoading = false; // Reset loading state
+      this.isLoading = true; // Reset loading state
 
       if (index === 0) {
         // Reset everything for name edit
@@ -225,7 +240,7 @@ export class InsuranceChat {
         this.firstName = '';
         this.lastName = '';
         this.progress = 0;
-        this.sessionId = `test-1234`;
+        // this.sessionId = `test-12345i`; // so that session id remains same
 
         // Set current question
         this.currentQuestion = {
@@ -245,23 +260,6 @@ export class InsuranceChat {
         // Ensure DOM is updated before initializing typing
         await new Promise(resolve => setTimeout(resolve, 0));
         await this.initializeTyping(this.initialQuestion);
-      } else if (index === 1) {
-        // Editing "how may I help you" question
-        this.progress = 20;
-        this.currentQuestion = {
-          text: `Hi ${this.userName}, how may I help you today?`,
-          component: {
-            type: 'TextBox',
-            label: 'How can we help?',
-            validationRules: [
-              {
-                type: 'Required',
-                message: 'Please let us know how we can help',
-              },
-            ],
-          },
-        };
-        await this.initializeTyping(this.currentQuestion.text);
       } else {
         // Get the previous answer to maintain context //editting the previous answer
         console.log('index::::' + index);
@@ -272,7 +270,7 @@ export class InsuranceChat {
         console.log('previousAnswer::::' + previousAnswer);
         console.log('Type::::' + previousQuestionType);
         // const mockResponse = await getMockBedrockResponse1(this.sessionId, previousAnswer, index);
-        const mockResponse = await EditMockBedrockResponse1(this.sessionId, previousAnswer, previousQuestion, index);
+        const mockResponse = await EditMockBedrockResponse1(this.sessionId, previousQuestion, previousAnswer, index);
         // console.log('mockResponse::::');
         // console.log(mockResponse);
         // Set progress based on the current position in the conversation
@@ -383,12 +381,20 @@ export class InsuranceChat {
         ? this.currentQuestion.component.map((_, index) => this.inputValues[`component-${index}`]).join(', ')
         : this.inputValues['component-0'];
 
-      const answer = {
+      // const answer = {
+      //   question: this.currentQuestion.text,
+      //   answer: formattedAnswer,
+      //   type: Array.isArray(this.currentQuestion.component)
+      //     ? this.currentQuestion.component.find(comp => comp.type === 'Password')?.type || this.currentQuestion.component[0].type
+      //     : this.currentQuestion.component.type,
+      // };
+      // In handleSubmit:
+      const answer: ChatAnswer = {
         question: this.currentQuestion.text,
         answer: formattedAnswer,
         type: Array.isArray(this.currentQuestion.component)
-          ? this.currentQuestion.component.find(comp => comp.type === 'Password')?.type || this.currentQuestion.component[0].type
-          : this.currentQuestion.component.type,
+          ? this.currentQuestion.component.map(comp => comp.type).join(',') // Store as "TextBox,Password,SSN"
+          : this.currentQuestion.component.type, // Store as single type e.g. "Password"
       };
 
       this.answers = [...this.answers, answer];
@@ -1115,30 +1121,82 @@ export class InsuranceChat {
     return '*'.repeat(password.length); // Replace each character with '*'
   }
 
+  // private renderPreviousAnswers() {
+  //   const reversedAnswers = [...this.answers].reverse();
+
+  //   return reversedAnswers.map((answer, index) => {
+  //     const originalIndex = this.answers.length - 1 - index;
+
+  //     let displayAnswer = answer.answer.toString();
+
+  //     // If answer contains multiple parts (comma-separated)
+  //     if (displayAnswer.includes(', ')) {
+  //       const parts = displayAnswer.split(', ');
+  //       const types = Array.isArray(this.currentQuestion.component) ? this.currentQuestion.component.map(comp => comp.type) : [this.currentQuestion.component?.type];
+
+  //       displayAnswer = parts
+  //         .map((part, i) => {
+  //           // Only mask if the type is specifically SSN or Password
+  //           if (types[i] === 'SSN') {
+  //             return this.maskSSN(part);
+  //           } else if (types[i] === 'Password') {
+  //             return this.maskPassword(part);
+  //           }
+  //           return part; // Leave all other parts unchanged
+  //         })
+  //         .join(', ');
+  //     } else {
+  //       // Single answer - mask only if type is SSN or Password
+  //       if (answer.type === 'SSN') {
+  //         displayAnswer = this.maskSSN(displayAnswer);
+  //       } else if (answer.type === 'Password') {
+  //         displayAnswer = this.maskPassword(displayAnswer);
+  //       }
+  //     }
+
+  //     return (
+  //       <div class="previous-answer" key={originalIndex}>
+  //         <div class="answer-header">{answer.question}</div>
+  //         <div class="answer-content">
+  //           <span>{displayAnswer}</span>
+  //           <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
+  //         </div>
+  //       </div>
+  //     );
+  //   });
+  // }
+
   private renderPreviousAnswers() {
     const reversedAnswers = [...this.answers].reverse();
 
     return reversedAnswers.map((answer, index) => {
       const originalIndex = this.answers.length - 1 - index;
 
-      // Handle comma-separated answers
-      const displayAnswer = answer.answer
-        .toString()
-        .split(', ')
-        .map((part, partIndex) => {
-          // Check if this part should be masked based on component type
-          if (Array.isArray(this.currentQuestion.component)) {
-            const componentType = this.currentQuestion.component[partIndex]?.type;
-            if (componentType === 'Password') {
+      let displayAnswer = answer.answer.toString();
+
+      // If answer contains multiple parts (comma-separated)
+      if (displayAnswer.includes(', ')) {
+        const parts = displayAnswer.split(', ');
+        const types = answer.type.split(','); // Split "TextBox,Password,SSN" into ["TextBox", "Password", "SSN"]
+
+        displayAnswer = parts
+          .map((part, i) => {
+            if (types[i] === 'SSN') {
+              return this.maskSSN(part);
+            } else if (types[i] === 'Password') {
               return this.maskPassword(part);
             }
-            if (componentType === 'SSN') {
-              return this.maskSSN(part);
-            }
-          }
-          return part;
-        })
-        .join(', ');
+            return part;
+          })
+          .join(', ');
+      } else {
+        // Single answer - mask only if type is SSN or Password
+        if (answer.type === 'SSN') {
+          displayAnswer = this.maskSSN(displayAnswer);
+        } else if (answer.type === 'Password') {
+          displayAnswer = this.maskPassword(displayAnswer);
+        }
+      }
 
       return (
         <div class="previous-answer" key={originalIndex}>
@@ -1151,84 +1209,50 @@ export class InsuranceChat {
       );
     });
   }
-
   // private renderPreviousAnswers() {
   //   const reversedAnswers = [...this.answers].reverse();
 
   //   return reversedAnswers.map((answer, index) => {
   //     const originalIndex = this.answers.length - 1 - index;
 
-  //     const isPassword = answer.type === 'Password'; // Direct type check
+  //     // Handle comma-separated answers
+  //     const displayAnswer = answer.answer
+  //       .toString()
+  //       .split(', ')
+  //       .map((part, partIndex) => {
+  //         // Check if this part should be masked based on component type
+  //         if (Array.isArray(this.currentQuestion.component)) {
+  //           const componentType = this.currentQuestion.component[partIndex]?.type;
+  //           if (componentType === 'Password') {
+  //             return this.maskPassword(part);
+  //           }
+  //           if (componentType === 'SSN') {
+  //             return this.maskSSN(part);
+  //           }
+  //         }
+  //         return part;
+  //       })
+  //       .join(', ');
+
+  //     // let displayAnswer = answer.answer.toString();
+
+  //     // // Check the answer type directly
+  //     // if (answer.type === 'Password') {
+  //     //   displayAnswer = this.maskPassword(displayAnswer);
+  //     // } else if (answer.type === 'SSN') {
+  //     //   displayAnswer = this.maskSSN(displayAnswer);
+  //     // }
 
   //     return (
   //       <div class="previous-answer" key={originalIndex}>
   //         <div class="answer-header">{answer.question}</div>
   //         <div class="answer-content">
-  //           <span>
-  //             {isPassword
-  //               ? this.maskPassword(answer.answer.toString())
-  //               : /\bssn\b/i.test(answer.type.toLowerCase())
-  //               ? this.maskSSN(answer.answer.toString())
-  //               : typeof answer.answer === 'string'
-  //               ? answer.answer
-  //               : JSON.stringify(answer.answer)}
-  //           </span>
+  //           <span>{displayAnswer}</span>
   //           <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
   //         </div>
   //       </div>
   //     );
   //   });
-  // }
-
-  /*This will reverse the previous ans*/
-  // private renderPreviousAnswers() {
-  //   // Create a copy of answers array and reverse it
-  //   const reversedAnswers = [...this.answers].reverse();
-
-  //   return reversedAnswers.map((answer, index) => {
-  //     // Calculate the original index for edit functionality
-  //     const originalIndex = this.answers.length - 1 - index;
-
-  //     return (
-  //       <div class="previous-answer" key={originalIndex}>
-  //         <div class="answer-header">{answer.question}</div>
-  //         <div class="answer-content">
-  //           <span>
-  //             {/\bpassword\b/i.test(answer.type.toLowerCase())
-  //               ? this.maskPassword(answer.answer.toString())
-  //               : /\bssn\b/i.test(answer.type.toLowerCase())
-  //               ? this.maskSSN(answer.answer.toString())
-  //               : typeof answer.answer === 'string'
-  //               ? answer.answer
-  //               : JSON.stringify(answer.answer)}
-  //           </span>
-  //           <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
-  //         </div>
-  //       </div>
-  //     );
-  //   });
-  // }
-
-  // private renderPreviousAnswers() {
-  //   return this.answers.map((answer, index) => (
-  //     <div class="previous-answer" key={index}>
-  //       <div class="answer-header">{answer.question}</div>
-  //       <div class="answer-content">
-  //         <span>
-  //           {/\bpassword\b/i.test(answer.type)
-  //             ? this.maskPassword(answer.answer.toString()) // Mask passwords completely
-  //             : /\bssn\b/i.test(answer.type)
-  //             ? this.maskSSN(answer.answer.toString()) // Mask SSNs
-  //             : typeof answer.answer === 'string'
-  //             ? answer.answer
-  //             : JSON.stringify(answer.answer)}
-  //         </span>
-  //         {/* <span>{/\bpassword\b/i.test(answer.question) ? '******' : typeof answer.answer === 'string' ? answer.answer : JSON.stringify(answer.answer)}</span> */}
-  //         {/* <span>{typeof answer.answer === 'string' ? answer.answer : JSON.stringify(answer.answer)}</span> */}
-  //         <button class="edit-button" onClick={() => this.showEditConfirmation(index)} aria-label="Edit answer"></button>
-  //       </div>
-  //     </div>
-  //   ));
   // }
 
   private renderCurrentQuestion() {
@@ -1237,7 +1261,7 @@ export class InsuranceChat {
     return (
       <div class="current-question">
         <div class="avatar">
-          <img src="/assets/image/Bot Avatar.png" alt="Agent avatar" />
+          <img src="/assets/image/Bot Avatar 2.png" alt="Agent avatar" />
           {/* <img src="https://raw.githubusercontent.com/dpmanek/images/refs/heads/main/Deep%20Manek%20image.png" alt="Agent avatar" /> */}
         </div>
         <div class="question-content">

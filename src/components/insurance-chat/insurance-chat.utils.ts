@@ -22,6 +22,12 @@ export interface BedrockResponse {
   progress: number;
 }
 
+export const generateSessionId = () => {
+  const timestamp = Date.now();
+  // const randomStr = Math.random().toString(36).substring(2, 8);
+  // return `session-${timestamp}-${randomStr}`;
+  return `session-${timestamp}`;
+};
 //old code
 // export const validateInput = (value: string, rules?: ValidationRule[]): string => {
 //   if (!rules) return '';
@@ -115,11 +121,14 @@ export const getMockBedrockResponse1 = async (sessionId: string, inquiry: string
     const currentQuestion = response.data;
     // console.log('currentQuestion:::::');
     // console.log(currentQuestion);
+    const progressValue = parseInt(data.progress, 10);
+    console.log('progressValue:::::');
+    console.log(progressValue);
     return {
       text: currentQuestion.text,
       component: currentQuestion.component,
       dataCollected: currentQuestion.data,
-      progress: currentQuestion.progress,
+      progress: progressValue,
     };
   } catch (error) {
     console.error('Error calling NODEJS API:', error);
@@ -129,12 +138,19 @@ export const getMockBedrockResponse1 = async (sessionId: string, inquiry: string
 
 export const EditMockBedrockResponse1 = async (sessionId: string, previousQuestion: string, previousAnswer: string, answersLength: number = 1): Promise<BedrockResponse> => {
   try {
+    console.log('Sending Edit Request');
+    console.log('previousQuestion:::::');
+    console.log(previousQuestion);
+    console.log('previousAnswer:::::');
+    console.log(previousAnswer);
+
     const response = await axios.post(
-      'http://localhost:7000/chat',
+      'https://4nm82v58i4.execute-api.us-east-1.amazonaws.com/dev/chat',
       {
         session_id: sessionId,
-        previousQuestion: previousQuestion,
-        previousAnswer: previousAnswer,
+        message: `Previous question: ${previousQuestion}. Previous answer: ${previousAnswer}. Reset all information after this field in the flow. No confirmation required.`,
+        // previousQuestion: `${previousQuestion}`,
+        // previousAnswer: `${previousAnswer}. Reset all information after this field in the flow. No confirmation required.`,
       },
       {
         headers: {
@@ -153,11 +169,15 @@ export const EditMockBedrockResponse1 = async (sessionId: string, previousQuesti
     const currentQuestion = response.data;
     // console.log('currentQuestion:::::');
     // console.log(currentQuestion);
+    const progressValue = parseInt(data.progress, 10);
+    console.log('progressValue:::::');
+    console.log(progressValue);
+
     return {
       text: currentQuestion.text,
       component: currentQuestion.component,
       dataCollected: currentQuestion.dataCollected,
-      progress: currentQuestion.progress,
+      progress: progressValue,
     };
   } catch (error) {
     console.error('Error calling NODEJS API:', error);
