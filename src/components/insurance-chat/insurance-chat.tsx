@@ -1,7 +1,22 @@
 import { Component, State, Element, h } from '@stencil/core';
 import Typed from 'typed.js';
 // import { ValidationRule, FormComponent, BedrockResponse, validateInput, startTyping, getMockBedrockResponse } from './insurance-chat.utils';
-import { ValidationRule, FormComponent, BedrockResponse, validateInput, startTyping, getMockBedrockResponse, getMockBedrockResponse1 } from './insurance-chat.utils';
+import {
+  ValidationRule,
+  FormComponent,
+  BedrockResponse,
+  validateInput,
+  startTyping,
+  getMockBedrockResponse1,
+  EditMockBedrockResponse1,
+  generateSessionId,
+} from './insurance-chat.utils';
+
+interface ChatAnswer {
+  question: string;
+  answer: string;
+  type: string;
+}
 
 @Component({
   tag: 'insurance-chat',
@@ -31,9 +46,10 @@ export class InsuranceChat {
   @State() showEditModal: boolean = false;
   @State() pendingEditIndex: number = -1;
   @Element() el: HTMLElement;
+  @State() inputValues: { [key: string]: string } = {}; // Multiple
 
   private typed: Typed;
-  private typingSpeed: number = 15;
+  private typingSpeed: number = 0;
   private typingDelay: number = 500;
   private firstNameInput: HTMLInputElement;
   private primaryInput: HTMLInputElement | HTMLSelectElement;
@@ -42,26 +58,6 @@ export class InsuranceChat {
   private sessionId: string;
   private chatInterface!: HTMLElement; //scroll
 
-  //scrolling
-  updateVisibility() {
-    const chatInterface = this.chatInterface;
-
-    // Get all questions and answers
-    const allQuestions = chatInterface.querySelectorAll('.previous-answer, .current-question');
-    const totalQuestions = allQuestions.length;
-
-    allQuestions.forEach((question, index) => {
-      // Hide all but the last two elements
-      if (index < totalQuestions - 2) {
-        question.classList.add('hidden'); // Hide older elements
-      } else {
-        question.classList.remove('hidden'); // Show the last two
-      }
-    });
-
-    // Automatically scroll to the bottom to show the latest two elements
-    chatInterface.scrollTop = chatInterface.scrollHeight;
-  }
   updateScroll() {
     const chatInterface = this.chatInterface;
 
@@ -71,43 +67,9 @@ export class InsuranceChat {
       behavior: 'smooth',
     });
   }
-  scrollToBottom() {
-    this.chatInterface.scrollTop = this.chatInterface.scrollHeight;
-  }
-  // Function to simulate additional height
-  updateHeight() {
-    const chatInterface = this.chatInterface;
-
-    // Select elements
-    const currentQuestion = chatInterface.querySelector('.current-question') as HTMLElement;
-    const previousAnswers = chatInterface.querySelectorAll('.previous-answer');
-    const lastPreviousAnswer = previousAnswers[previousAnswers.length - 1] as HTMLElement;
-
-    // Ensure fake-bottom-space exists
-    let fakeBottom = chatInterface.querySelector('.fake-bottom-space') as HTMLElement;
-    if (!fakeBottom) {
-      fakeBottom = document.createElement('div');
-      fakeBottom.classList.add('fake-bottom-space');
-      chatInterface.appendChild(fakeBottom);
-    }
-
-    // Calculate height for fake bottom to fit last previous answer and current question
-    const lastAnswerHeight = lastPreviousAnswer ? lastPreviousAnswer.offsetHeight : 0;
-    const currentQuestionHeight = currentQuestion ? currentQuestion.offsetHeight : 0;
-    const fakeBottomHeight = chatInterface.offsetHeight - (lastAnswerHeight + currentQuestionHeight);
-
-    // Update fake bottom height and ensure it's the last element
-    fakeBottom.style.height = `${fakeBottomHeight > 0 ? fakeBottomHeight : 0}px`;
-    if (!fakeBottom.isSameNode(chatInterface.lastElementChild)) {
-      chatInterface.appendChild(fakeBottom); // Ensure it's always the last element
-    }
-
-    // Scroll to show the last previous answer and the current question
-    // chatInterface.scrollTop = chatInterface.scrollHeight;
-  }
 
   componentWillLoad() {
-    this.sessionId = `test-1234`;
+    this.sessionId = generateSessionId();
     this.currentQuestion = {
       text: this.initialQuestion,
       component: {
@@ -126,15 +88,12 @@ export class InsuranceChat {
   componentDidLoad() {
     this.initializeTyping(this.currentQuestion.text);
     this.setupIntersectionObserver();
-    // this.updateHeight(); //scroll
-    // this.updateVisibility(); //scroll
+
     this.updateScroll();
   }
 
   // Lifecycle method: Runs after each update
   componentDidUpdate() {
-    // this.updateVisibility();
-    // this.updateHeight(); //scroll
     this.updateScroll();
   }
 
@@ -202,10 +161,19 @@ export class InsuranceChat {
               } else if (this.userName && this.primaryInput) {
                 this.primaryInput.focus();
               }
-              const currentQuestion = this.el.shadowRoot.querySelector('.current-question');
+              // const currentQuestion = this.el.shadowRoot.querySelector('.current-question');
               // if (currentQuestion) {
               //   currentQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
               // }
+
+              const chatInterface = this.el.shadowRoot.querySelector('.chat-interface');
+              // const chatInterface = this.chatInterface;
+
+              // Smoothly scroll to the bottom
+              chatInterface.scrollTo({
+                top: chatInterface.scrollHeight,
+                behavior: 'smooth',
+              });
               // this.chatInterface.scrollTop = this.chatInterface.scrollHeight;
             }, 100);
             resolve();
@@ -227,9 +195,20 @@ export class InsuranceChat {
     this.validationError = '';
   };
 
-  private handleInput = (e: Event) => {
+  // private handleInput = (e: Event) => {
+  //   const input = e.target as HTMLInputElement | HTMLSelectElement;
+  //   this.primaryValue = input.value;
+  //   this.validationError = '';
+  // };
+
+  //handling multiple form inputs
+  private handleInput = (e: Event, index: number) => {
     const input = e.target as HTMLInputElement | HTMLSelectElement;
-    this.primaryValue = input.value;
+    this.inputValues = {
+      ...this.inputValues,
+      [`component-${index}`]: input.value,
+    };
+    // console.log('Input Values:', this.inputValues); // Debug log
     this.validationError = '';
   };
 
@@ -253,7 +232,7 @@ export class InsuranceChat {
       this.primaryValue = '';
       this.validationError = '';
       this.showForm = false; // Hide form while typing animation plays
-      this.isLoading = false; // Reset loading state
+      this.isLoading = true; // Reset loading state
 
       if (index === 0) {
         // Reset everything for name edit
@@ -261,7 +240,7 @@ export class InsuranceChat {
         this.firstName = '';
         this.lastName = '';
         this.progress = 0;
-        this.sessionId = `test-1234`;
+        // this.sessionId = `test-12345i`; // so that session id remains same
 
         // Set current question
         this.currentQuestion = {
@@ -281,23 +260,6 @@ export class InsuranceChat {
         // Ensure DOM is updated before initializing typing
         await new Promise(resolve => setTimeout(resolve, 0));
         await this.initializeTyping(this.initialQuestion);
-      } else if (index === 1) {
-        // Editing "how may I help you" question
-        this.progress = 20;
-        this.currentQuestion = {
-          text: `Hi ${this.userName}, how may I help you today?`,
-          component: {
-            type: 'TextBox',
-            label: 'How can we help?',
-            validationRules: [
-              {
-                type: 'Required',
-                message: 'Please let us know how we can help',
-              },
-            ],
-          },
-        };
-        await this.initializeTyping(this.currentQuestion.text);
       } else {
         // Get the previous answer to maintain context //editting the previous answer
         console.log('index::::' + index);
@@ -307,7 +269,8 @@ export class InsuranceChat {
         console.log('previousQuestion::::' + previousQuestion);
         console.log('previousAnswer::::' + previousAnswer);
         console.log('Type::::' + previousQuestionType);
-        const mockResponse = await getMockBedrockResponse1(this.sessionId, this.userName, previousAnswer, index);
+        // const mockResponse = await getMockBedrockResponse1(this.sessionId, previousAnswer, index);
+        const mockResponse = await EditMockBedrockResponse1(this.sessionId, previousQuestion, previousAnswer, index);
         // console.log('mockResponse::::');
         // console.log(mockResponse);
         // Set progress based on the current position in the conversation
@@ -328,6 +291,7 @@ export class InsuranceChat {
     }
   }
 
+  //typing edit for handle submit
   private async handleSubmit(e: Event) {
     e.preventDefault();
 
@@ -336,13 +300,40 @@ export class InsuranceChat {
       return;
     }
 
-    if (this.userName && !this.primaryValue.trim()) return;
+    // For non-name inputs, check if we have a value
+    if (this.userName) {
+      // For single component
+      if (!Array.isArray(this.currentQuestion.component)) {
+        if (!this.inputValues['component-0']?.trim()) {
+          this.validationError = 'This field is required';
+          return;
+        }
+      }
+      // For multiple components
+      else {
+        const hasEmptyInputs = this.currentQuestion.component.some((_, index) => !this.inputValues[`component-${index}`]?.trim());
+        if (hasEmptyInputs) {
+          this.validationError = 'All fields are required';
+          return;
+        }
+      }
 
-    const validationError = this.userName ? validateInput(this.primaryValue, this.currentQuestion.component?.validationRules) : '';
-
-    if (validationError) {
-      this.validationError = validationError;
-      return;
+      // Validate all components if there are multiple
+      if (Array.isArray(this.currentQuestion.component)) {
+        for (let i = 0; i < this.currentQuestion.component.length; i++) {
+          const validationError = validateInput(this.inputValues[`component-${i}`], this.currentQuestion.component[i].validationRules);
+          if (validationError) {
+            this.validationError = validationError;
+            return;
+          }
+        }
+      } else {
+        const validationError = validateInput(this.inputValues['component-0'], this.currentQuestion.component?.validationRules);
+        if (validationError) {
+          this.validationError = validationError;
+          return;
+        }
+      }
     }
 
     this.validationError = '';
@@ -355,11 +346,10 @@ export class InsuranceChat {
         const nameAnswer = {
           question: this.currentQuestion.text,
           answer: this.userName,
-          type: this.currentQuestion.component.type,
+          type: Array.isArray(this.currentQuestion.component) ? this.currentQuestion.component[0].type : this.currentQuestion.component.type,
         };
         this.answers = [nameAnswer];
 
-        // Observe the new answer after a short delay to ensure it's in the DOM
         setTimeout(() => {
           const newAnswer = this.el.shadowRoot.querySelector('.previous-answer:last-child');
           if (newAnswer && this.observer) {
@@ -369,37 +359,16 @@ export class InsuranceChat {
 
         this.firstName = '';
         this.lastName = '';
-        this.isLoading = false;
-
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // const greetingText = `Hi ${this.userName}, how may I help you today?`;
-        // this.currentQuestion = {
-        //   text: greetingText,
-        //   component: {
-        //     type: 'TextBox',
-        //     label: 'How can we help?',
-        //     validationRules: [
-        //       {
-        //         type: 'Required',
-        //         message: 'Please let us know how we can help',
-        //       },
-        //     ],
-        //   },
-        // };
-
-        // await this.initializeTyping(greetingText);
-        // return;
 
         try {
-          const response = await getMockBedrockResponse1(this.sessionId, ' ', `Hi I am ${this.userName}`, 1);
+          const response = await getMockBedrockResponse1(this.sessionId, `Hi I am ${this.userName}`, 1);
           this.progress = response.progress;
           this.currentQuestion = {
             text: response.text,
             component: response.component,
           };
-          await this.initializeTyping(response.text);
           this.isLoading = false;
+          await this.initializeTyping(response.text);
         } catch (error) {
           console.error('Error getting response:', error);
           this.isLoading = false;
@@ -407,14 +376,29 @@ export class InsuranceChat {
         return;
       }
 
-      const answer = {
+      // Format multiple component answers as comma-separated string
+      const formattedAnswer = Array.isArray(this.currentQuestion.component)
+        ? this.currentQuestion.component.map((_, index) => this.inputValues[`component-${index}`]).join(', ')
+        : this.inputValues['component-0'];
+
+      // const answer = {
+      //   question: this.currentQuestion.text,
+      //   answer: formattedAnswer,
+      //   type: Array.isArray(this.currentQuestion.component)
+      //     ? this.currentQuestion.component.find(comp => comp.type === 'Password')?.type || this.currentQuestion.component[0].type
+      //     : this.currentQuestion.component.type,
+      // };
+      // In handleSubmit:
+      const answer: ChatAnswer = {
         question: this.currentQuestion.text,
-        answer: this.primaryValue,
-        type: this.currentQuestion.component.type,
+        answer: formattedAnswer,
+        type: Array.isArray(this.currentQuestion.component)
+          ? this.currentQuestion.component.map(comp => comp.type).join(',') // Store as "TextBox,Password,SSN"
+          : this.currentQuestion.component.type, // Store as single type e.g. "Password"
       };
+
       this.answers = [...this.answers, answer];
 
-      // Observe the new answer after a short delay to ensure it's in the DOM
       setTimeout(() => {
         const newAnswer = this.el.shadowRoot.querySelector('.previous-answer:last-child');
         if (newAnswer && this.observer) {
@@ -422,139 +406,707 @@ export class InsuranceChat {
         }
       }, 0);
 
-      if (this.answers.length <= 6) {
-        //entry into the first call to bedrock response
-        // console.log('hit agian' + this.answers.length);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const mockResponse = await getMockBedrockResponse1(this.sessionId, this.userName, this.primaryValue, this.answers.length);
-        this.progress = mockResponse.progress;
-        this.currentQuestion = {
-          text: mockResponse.text,
-          component: mockResponse.component,
-        };
-        await this.initializeTyping(mockResponse.text);
-      } else {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const finalText = `Thank you ${this.userName}! We'll process your information and get back to you shortly.`;
-        this.currentQuestion = {
-          text: finalText,
-        };
-        this.progress = 100;
-        await this.initializeTyping(finalText);
-      }
+      const response = await getMockBedrockResponse1(this.sessionId, formattedAnswer, this.answers.length);
+      this.progress = response.progress;
+      this.currentQuestion = {
+        text: response.text,
+        component: response.component,
+      };
+      this.isLoading = false;
+      await this.initializeTyping(response.text);
 
-      this.primaryValue = '';
+      // Clear all input values after submission
+      this.inputValues = {};
     } catch (error) {
       console.error('Error processing answer:', error);
     } finally {
       this.isLoading = false;
-      // this.chatInterface.scrollTop = this.chatInterface.scrollHeight;
     }
   }
 
+  //new code for handle submit
+  // private async handleSubmit(e: Event) {
+  //   e.preventDefault();
+
+  //   if (!this.userName && (!this.firstName.trim() || !this.lastName.trim())) {
+  //     this.validationError = 'Please enter both first and last name';
+  //     return;
+  //   }
+
+  //   // For non-name inputs, check if we have a value
+  //   if (this.userName) {
+  //     // For single component
+  //     if (!Array.isArray(this.currentQuestion.component)) {
+  //       if (!this.inputValues['component-0']?.trim()) {
+  //         this.validationError = 'This field is required';
+  //         return;
+  //       }
+  //     }
+  //     // For multiple components
+  //     else {
+  //       const hasEmptyInputs = this.currentQuestion.component.some((_, index) => !this.inputValues[`component-${index}`]?.trim());
+  //       if (hasEmptyInputs) {
+  //         this.validationError = 'All fields are required';
+  //         return;
+  //       }
+  //     }
+  //   }
+
+  //   const validationError = this.userName
+  //     ? validateInput(
+  //         this.inputValues['component-0'],
+  //         Array.isArray(this.currentQuestion.component) ? this.currentQuestion.component[0].validationRules : this.currentQuestion.component?.validationRules,
+  //       )
+  //     : '';
+
+  //   if (validationError) {
+  //     this.validationError = validationError;
+  //     return;
+  //   }
+
+  //   this.validationError = '';
+  //   this.isLoading = true;
+  //   this.showForm = false;
+
+  //   try {
+  //     if (!this.userName) {
+  //       this.userName = `${this.firstName} ${this.lastName}`;
+  //       const nameAnswer = {
+  //         question: this.currentQuestion.text,
+  //         answer: this.userName,
+  //         type: Array.isArray(this.currentQuestion.component) ? this.currentQuestion.component[0].type : this.currentQuestion.component.type,
+  //       };
+  //       this.answers = [nameAnswer];
+
+  //       setTimeout(() => {
+  //         const newAnswer = this.el.shadowRoot.querySelector('.previous-answer:last-child');
+  //         if (newAnswer && this.observer) {
+  //           this.observer.observe(newAnswer);
+  //         }
+  //       }, 0);
+
+  //       this.firstName = '';
+  //       this.lastName = '';
+  //       this.isLoading = false;
+
+  //       await new Promise(resolve => setTimeout(resolve, 100));
+
+  //       try {
+  //         const response = await getMockBedrockResponse1(this.sessionId, ' ', `Hi I am ${this.userName}`, 1);
+  //         this.progress = response.progress;
+  //         this.currentQuestion = {
+  //           text: response.text,
+  //           component: response.component,
+  //         };
+  //         await this.initializeTyping(response.text);
+  //         this.isLoading = false;
+  //       } catch (error) {
+  //         console.error('Error getting response:', error);
+  //         this.isLoading = false;
+  //       }
+  //       return;
+  //     }
+
+  //     // Format multiple component answers as comma-separated string
+  //     const formattedAnswer = Array.isArray(this.currentQuestion.component)
+  //       ? this.currentQuestion.component.map((_, index) => this.inputValues[`component-${index}`]).join(', ')
+  //       : this.inputValues['component-0'];
+
+  //     const answer = {
+  //       question: this.currentQuestion.text,
+  //       answer: formattedAnswer,
+  //       type: Array.isArray(this.currentQuestion.component)
+  //         ? this.currentQuestion.component.find(comp => comp.type === 'Password')?.type || this.currentQuestion.component[0].type
+  //         : this.currentQuestion.component.type,
+  //     };
+
+  //     //old code
+  //     // Format multiple component answers as comma-separated string
+  //     // const formattedAnswer = Array.isArray(this.currentQuestion.component)
+  //     //   ? this.currentQuestion.component.map((_, index) => this.inputValues[`component-${index}`]).join(', ')
+  //     //   : this.inputValues['component-0'];
+
+  //     // const answer = {
+  //     //   question: this.currentQuestion.text,
+  //     //   answer: formattedAnswer,
+  //     //   type: Array.isArray(this.currentQuestion.component) ? this.currentQuestion.component[0].type : this.currentQuestion.component.type,
+  //     // };
+
+  //     this.answers = [...this.answers, answer];
+
+  //     setTimeout(() => {
+  //       const newAnswer = this.el.shadowRoot.querySelector('.previous-answer:last-child');
+  //       if (newAnswer && this.observer) {
+  //         this.observer.observe(newAnswer);
+  //       }
+  //     }, 0);
+
+  //     await new Promise(resolve => setTimeout(resolve, 1000));
+  //     const response = await getMockBedrockResponse1(this.sessionId, this.userName, formattedAnswer, this.answers.length);
+  //     this.progress = response.progress;
+  //     this.currentQuestion = {
+  //       text: response.text,
+  //       component: response.component,
+  //     };
+  //     await this.initializeTyping(response.text);
+
+  //     // Clear all input values after submission
+  //     this.inputValues = {};
+  //   } catch (error) {
+  //     console.error('Error processing answer:', error);
+  //   } finally {
+  //     this.isLoading = false;
+  //   }
+  // }
+
+  // old code for handle submit
+  // private async handleSubmit(e: Event) {
+  //   e.preventDefault();
+
+  //   if (!this.userName && (!this.firstName.trim() || !this.lastName.trim())) {
+  //     this.validationError = 'Please enter both first and last name';
+  //     return;
+  //   }
+
+  //   if (this.userName && !this.primaryValue.trim()) return;
+  //   // if (this.userName && !this.primaryValue.trim()) {
+  //   //   const component = Array.isArray(this.currentQuestion.component)
+  //   //     ? this.currentQuestion.component[0]
+  //   //     : this.currentQuestion.component;
+
+  //   //   if (component?.validationRules?.type === 'Required') {
+  //   //     this.validationError = component.validationRules.message;
+  //   //     return;
+  //   //   }
+  //   // }
+
+  //   const validationError = this.userName ? validateInput(this.primaryValue, this.currentQuestion.component?.validationRules) : '';
+
+  //   if (validationError) {
+  //     this.validationError = validationError;
+  //     return;
+  //   }
+
+  //   this.validationError = '';
+  //   this.isLoading = true;
+  //   this.showForm = false;
+
+  //   try {
+  //     if (!this.userName) {
+  //       this.userName = `${this.firstName} ${this.lastName}`;
+  //       const nameAnswer = {
+  //         question: this.currentQuestion.text,
+  //         answer: this.userName,
+  //         type: this.currentQuestion.component.type,
+  //       };
+  //       this.answers = [nameAnswer];
+
+  //       // Observe the new answer after a short delay to ensure it's in the DOM
+  //       setTimeout(() => {
+  //         const newAnswer = this.el.shadowRoot.querySelector('.previous-answer:last-child');
+  //         if (newAnswer && this.observer) {
+  //           this.observer.observe(newAnswer);
+  //         }
+  //       }, 0);
+
+  //       this.firstName = '';
+  //       this.lastName = '';
+  //       this.isLoading = false;
+
+  //       await new Promise(resolve => setTimeout(resolve, 100));
+
+  //       /* First Call to Bedrock API - for getting initial response */
+  //       try {
+  //         const response = await getMockBedrockResponse1(this.sessionId, ' ', `Hi I am ${this.userName}`, 1);
+  //         this.progress = response.progress;
+  //         this.currentQuestion = {
+  //           text: response.text,
+  //           component: response.component,
+  //         };
+  //         await this.initializeTyping(response.text);
+  //         this.isLoading = false;
+  //       } catch (error) {
+  //         console.error('Error getting response:', error);
+  //         this.isLoading = false;
+  //       }
+  //       return;
+  //     }
+
+  //     const answer = {
+  //       question: this.currentQuestion.text,
+  //       answer: this.primaryValue,
+  //       type: this.currentQuestion.component.type,
+  //     };
+  //     this.answers = [...this.answers, answer];
+
+  //     // Observe the new answer after a short delay to ensure it's in the DOM
+  //     setTimeout(() => {
+  //       const newAnswer = this.el.shadowRoot.querySelector('.previous-answer:last-child');
+  //       if (newAnswer && this.observer) {
+  //         this.observer.observe(newAnswer);
+  //       }
+  //     }, 0);
+
+  //     if (this.answers.length <= 6) {
+  //       //entry into the first call to bedrock response
+  //       // console.log('hit agian' + this.answers.length);
+  //       await new Promise(resolve => setTimeout(resolve, 1000));
+  //       const mockResponse = await getMockBedrockResponse1(this.sessionId, this.userName, this.primaryValue, this.answers.length);
+  //       this.progress = mockResponse.progress;
+  //       this.currentQuestion = {
+  //         text: mockResponse.text,
+  //         component: mockResponse.component,
+  //       };
+  //       await this.initializeTyping(mockResponse.text);
+  //     } else {
+  //       await new Promise(resolve => setTimeout(resolve, 1000));
+  //       const finalText = `Thank you ${this.userName}! We'll process your information and get back to you shortly.`;
+  //       this.currentQuestion = {
+  //         text: finalText,
+  //       };
+  //       this.progress = 100;
+  //       await this.initializeTyping(finalText);
+  //     }
+
+  //     this.primaryValue = '';
+  //   } catch (error) {
+  //     console.error('Error processing answer:', error);
+  //   } finally {
+  //     this.isLoading = false;
+  //     // this.chatInterface.scrollTop = this.chatInterface.scrollHeight;
+  //   }
+  // }
+
+  private getComponentPattern(): 'address' | 'security-questions' | 'default' {
+    const components = this.currentQuestion.component;
+    if (!Array.isArray(components)) return 'default';
+
+    // Check for address pattern (4 TextBoxes)
+    if (components.length === 4 && components.every(c => c.type === 'TextBox') && components.some(c => c.label.toLowerCase().includes('street'))) {
+      return 'address';
+    }
+
+    // Check for security questions pattern (pairs of Select/Dropdown and TextBox)
+    if (components.length % 2 === 0 && components.every((c, i) => (i % 2 === 0 ? c.type === 'Select' || c.type === 'DropDown' : c.type === 'TextBox'))) {
+      return 'security-questions';
+    }
+
+    return 'default';
+  }
+
+  //for adjusting css
   private renderFormComponent() {
-    if (!this.currentQuestion.component) return null;
+    if (!Array.isArray(this.currentQuestion.component) || this.currentQuestion.component.length === 0) return null;
 
-    switch (this.currentQuestion.component.type) {
-      case 'TextBox':
-        return (
-          <div class="input-wrapper">
-            <input
-              type="text"
-              placeholder={this.currentQuestion.component.format || this.currentQuestion.component.label}
-              value={this.primaryValue}
-              onInput={this.handleInput}
-              ref={el => (this.primaryInput = el)}
-              required
-            />
-          </div>
-        );
+    const pattern = this.getComponentPattern();
+    const containerClass = `form-container ${pattern}`;
 
-      case 'Select':
-        return (
-          <div class="input-wrapper">
-            <select onInput={this.handleInput} ref={el => (this.primaryInput = el)} required>
-              <option value="">Select {this.currentQuestion.component.label}</option>
-              {this.currentQuestion.component.options?.map(option => (
-                <option value={option} selected={this.primaryValue === option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-        );
+    return (
+      <div class={containerClass}>
+        {this.currentQuestion.component.map((component, index) => {
+          const wrapperClass = pattern === 'security-questions' ? `input-wrapper question-pair-${Math.floor(index / 2)}` : 'input-wrapper';
 
-      case 'Radio':
-        return (
-          <div class="radio-group">
-            {this.currentQuestion.component.options?.map(option => (
-              <label class="radio-label">
-                <input type="radio" name="radio-option" value={option} checked={this.primaryValue === option} onInput={this.handleInput} />
-                <span>{option}</span>
-              </label>
-            ))}
-          </div>
-        );
+          switch (component.type) {
+            case 'TextBox':
+              return (
+                <div class={wrapperClass} key={`textbox-${index}`}>
+                  <input
+                    type="text"
+                    placeholder={component.format || component.label}
+                    value={this.inputValues[`component-${index}`] || ''}
+                    onInput={e => this.handleInput(e, index)}
+                    ref={el => (this.primaryInput = el)}
+                    required
+                  />
+                </div>
+              );
 
-      case 'DatePicker':
-        // const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-        const twentyYearsAgo = new Date();
-        twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
-        const max = twentyYearsAgo.toISOString().split('T')[0];
-        return (
-          <div class="input-wrapper">
-            <input type="date" max={max} value={this.primaryValue} onInput={this.handleInput} ref={el => (this.primaryInput = el)} required />
-          </div>
-        );
+            case 'DropDown':
+            case 'Select':
+              return (
+                <div class={wrapperClass} key={`select-${index}`}>
+                  <select onInput={e => this.handleInput(e, index)} ref={el => (this.primaryInput = el)} required>
+                    <option value="">Select {component.label}</option>
+                    {component.options?.map(option => (
+                      <option value={option} selected={this.inputValues[`component-${index}`] === option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              );
 
-      case 'Password':
-        return (
-          <div class="input-wrapper">
-            <input
-              type="password"
-              placeholder={this.currentQuestion.component.label || 'Enter Password'}
-              value={this.primaryValue}
-              onInput={this.handleInput}
-              ref={el => (this.primaryInput = el)}
-              required
-              minLength={8} // Example: Minimum length for password validation
-              pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" // Example: Regex for password strength
-              title="Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number."
-            />
-          </div>
-        );
-      case 'SSN':
-        const formatSSN = event => {
-          let value = event.target.value.replace(/\D/g, ''); // Remove non-numeric characters
-          if (value.length > 3 && value.length <= 5) {
-            value = value.replace(/^(\d{3})(\d{0,2})/, '$1-$2'); // Format as ###-##
-          } else if (value.length > 5) {
-            value = value.replace(/^(\d{3})(\d{2})(\d{0,4})/, '$1-$2-$3'); // Format as ###-##-####
+            case 'RadioButton':
+            case 'Radio':
+              return (
+                <div class={`${wrapperClass} radio-group`} key={`radio-${index}`}>
+                  {component.options?.map(option => (
+                    <label class="radio-label" key={`${option}-${index}`}>
+                      <input
+                        type="radio"
+                        name={`radio-option-${index}`}
+                        value={option}
+                        checked={this.inputValues[`component-${index}`] === option}
+                        onInput={e => this.handleInput(e, index)}
+                      />
+                      <span>{option}</span>
+                    </label>
+                  ))}
+                </div>
+              );
+
+            case 'DatePicker':
+              const twentyYearsAgo = new Date();
+              twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
+              const max = twentyYearsAgo.toISOString().split('T')[0];
+              return (
+                <div class={wrapperClass} key={`date-picker-${index}`}>
+                  <input
+                    type="date"
+                    max={max}
+                    value={this.inputValues[`component-${index}`] || ''}
+                    onInput={e => this.handleInput(e, index)}
+                    ref={el => (this.primaryInput = el)}
+                    required
+                  />
+                </div>
+              );
+
+            case 'Email':
+              return (
+                <div class={wrapperClass} key={`email-${index}`}>
+                  <input
+                    type="email"
+                    placeholder={component.label || 'Enter email address'}
+                    value={this.inputValues[`component-${index}`] || ''}
+                    onInput={e => this.handleInput(e, index)}
+                    ref={el => (this.primaryInput = el)}
+                    required
+                    pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+                    title="Please enter a valid email address"
+                  />
+                </div>
+              );
+
+            case 'Password':
+              return (
+                <div class={wrapperClass} key={`password-${index}`}>
+                  <input
+                    type="password"
+                    placeholder={component.label || 'Enter Password'}
+                    value={this.inputValues[`component-${index}`] || ''}
+                    onInput={e => this.handleInput(e, index)}
+                    ref={el => (this.primaryInput = el)}
+                    required
+                    minLength={8}
+                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                    title="Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number."
+                  />
+                </div>
+              );
+
+            case 'SSN':
+              const formatSSN = event => {
+                let value = event.target.value.replace(/\D/g, '');
+                if (value.length > 3 && value.length <= 5) {
+                  value = value.replace(/^(\d{3})(\d{0,2})/, '$1-$2');
+                } else if (value.length > 5) {
+                  value = value.replace(/^(\d{3})(\d{2})(\d{0,4})/, '$1-$2-$3');
+                }
+                event.target.value = value;
+                this.inputValues[`component-${index}`] = value;
+                this.handleInput(event, index);
+              };
+
+              return (
+                <div class={wrapperClass} key={`ssn-${index}`}>
+                  <input
+                    type="text"
+                    placeholder={component.label || 'Enter SSN'}
+                    value={this.inputValues[`component-${index}`] || ''}
+                    onInput={formatSSN}
+                    ref={el => (this.primaryInput = el)}
+                    required
+                    maxLength={11}
+                    pattern="\d{3}-\d{2}-\d{4}"
+                    title="SSN must be in the format ###-##-####"
+                  />
+                </div>
+              );
+
+            default:
+              return null;
           }
-          event.target.value = value; // Update the input value
-          this.primaryValue = value; // Update the internal state
-          this.handleInput(event); // Call the existing input handler
-        };
-
-        return (
-          <div class="input-wrapper">
-            <input
-              type="text"
-              placeholder={this.currentQuestion.component.label || 'Enter SSN'}
-              value={this.primaryValue}
-              onInput={formatSSN}
-              ref={el => (this.primaryInput = el)}
-              required
-              maxLength={11} // SSN Format: ###-##-####
-              pattern="\d{3}-\d{2}-\d{4}" // Regex to enforce SSN format
-              title="SSN must be in the format ###-##-####"
-            />
-          </div>
-        );
-      default:
-        return null;
-    }
+        })}
+      </div>
+    );
   }
+
+  // working new multiple form inputs
+  // private renderFormComponent() {
+  //   if (!Array.isArray(this.currentQuestion.component) || this.currentQuestion.component.length === 0) return null;
+
+  //   const pattern = this.getComponentPattern();
+  //   const containerClass = `form-container ${pattern}`;
+
+  //   return this.currentQuestion.component.map((component, index) => {
+  //     switch (component.type) {
+  //       case 'TextBox':
+  //         return (
+  //           <div class="input-wrapper" key={`textbox-${index}`}>
+  //             <input
+  //               type="text"
+  //               placeholder={component.format || component.label}
+  //               value={this.inputValues[`component-${index}`] || ''}
+  //               onInput={e => {
+  //                 // console.log('Input event:', e); // Debug log
+  //                 this.handleInput(e, index);
+  //               }}
+  //               ref={el => (this.primaryInput = el)}
+  //               required
+  //             />
+  //           </div>
+  //         );
+
+  //       case 'DropDown':
+  //       case 'Select':
+  //         return (
+  //           <div class="input-wrapper" key={`select-${index}`}>
+  //             <select onInput={e => this.handleInput(e, index)} ref={el => (this.primaryInput = el)} required>
+  //               <option value="">Select {component.label}</option>
+  //               {component.options?.map(option => (
+  //                 <option value={option} selected={this.inputValues[`component-${index}`] === option}>
+  //                   {option}
+  //                 </option>
+  //               ))}
+  //             </select>
+  //           </div>
+  //         );
+
+  //       case 'RadioButton':
+  //       case 'Radio':
+  //         return (
+  //           <div class="radio-group" key={`radio-${index}`}>
+  //             {component.options?.map(option => (
+  //               <label class="radio-label" key={`${option}-${index}`}>
+  //                 <input
+  //                   type="radio"
+  //                   name={`radio-option-${index}`}
+  //                   value={option}
+  //                   checked={this.inputValues[`component-${index}`] === option}
+  //                   onInput={e => this.handleInput(e, index)}
+  //                 />
+  //                 <span>{option}</span>
+  //               </label>
+  //             ))}
+  //           </div>
+  //         );
+
+  //       case 'DatePicker':
+  //         const twentyYearsAgo = new Date();
+  //         twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
+  //         const max = twentyYearsAgo.toISOString().split('T')[0];
+  //         return (
+  //           <div class="input-wrapper" key={`date-picker-${index}`}>
+  //             <input
+  //               type="date"
+  //               max={max}
+  //               value={this.inputValues[`component-${index}`] || ''}
+  //               onInput={e => this.handleInput(e, index)}
+  //               ref={el => (this.primaryInput = el)}
+  //               required
+  //             />
+  //           </div>
+  //         );
+
+  //       case 'Email':
+  //         return (
+  //           <div class="input-wrapper" key={`email-${index}`}>
+  //             <input
+  //               type="email"
+  //               placeholder={component.label || 'Enter email address'}
+  //               value={this.inputValues[`component-${index}`] || ''}
+  //               onInput={e => this.handleInput(e, index)}
+  //               ref={el => (this.primaryInput = el)}
+  //               required
+  //               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+  //               title="Please enter a valid email address"
+  //             />
+  //           </div>
+  //         );
+
+  //       case 'Password':
+  //         return (
+  //           <div class="input-wrapper" key={`password-${index}`}>
+  //             <input
+  //               type="password"
+  //               placeholder={component.label || 'Enter Password'}
+  //               value={this.inputValues[`component-${index}`] || ''}
+  //               onInput={e => this.handleInput(e, index)}
+  //               ref={el => (this.primaryInput = el)}
+  //               required
+  //               minLength={8}
+  //               pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+  //               title="Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number."
+  //             />
+  //           </div>
+  //         );
+
+  //       case 'SSN':
+  //         const formatSSN = event => {
+  //           let value = event.target.value.replace(/\D/g, '');
+  //           if (value.length > 3 && value.length <= 5) {
+  //             value = value.replace(/^(\d{3})(\d{0,2})/, '$1-$2');
+  //           } else if (value.length > 5) {
+  //             value = value.replace(/^(\d{3})(\d{2})(\d{0,4})/, '$1-$2-$3');
+  //           }
+  //           event.target.value = value;
+  //           this.inputValues[`component-${index}`] = value;
+  //           this.handleInput(event, index);
+  //         };
+
+  //         return (
+  //           <div class="input-wrapper" key={`ssn-${index}`}>
+  //             <input
+  //               type="text"
+  //               placeholder={component.label || 'Enter SSN'}
+  //               value={this.inputValues[`component-${index}`] || ''}
+  //               onInput={formatSSN}
+  //               ref={el => (this.primaryInput = el)}
+  //               required
+  //               maxLength={11}
+  //               pattern="\d{3}-\d{2}-\d{4}"
+  //               title="SSN must be in the format ###-##-####"
+  //             />
+  //           </div>
+  //         );
+
+  //       default:
+  //         return null;
+  //     }
+  //   });
+  // }
+
+  /** OLD CODE TO RENDER ONLY ONE ELEMENT */
+  // private renderFormComponent() {
+  //   if (!this.currentQuestion.component) return null;
+
+  //   switch (this.currentQuestion.component.type) {
+  //     case 'TextBox':
+  //       return (
+  //         <div class="input-wrapper">
+  //           <input
+  //             type="text"
+  //             placeholder={this.currentQuestion.component.format || this.currentQuestion.component.label}
+  //             value={this.primaryValue}
+  //             onInput={this.handleInput}
+  //             ref={el => (this.primaryInput = el)}
+  //             required
+  //           />
+  //         </div>
+  //       );
+
+  //     case 'Select':
+  //       return (
+  //         <div class="input-wrapper">
+  //           <select onInput={this.handleInput} ref={el => (this.primaryInput = el)} required>
+  //             <option value="">Select {this.currentQuestion.component.label}</option>
+  //             {this.currentQuestion.component.options?.map(option => (
+  //               <option value={option} selected={this.primaryValue === option}>
+  //                 {option}
+  //               </option>
+  //             ))}
+  //           </select>
+  //         </div>
+  //       );
+
+  //     case 'Radio':
+  //       return (
+  //         <div class="radio-group">
+  //           {this.currentQuestion.component.options?.map(option => (
+  //             <label class="radio-label">
+  //               <input type="radio" name="radio-option" value={option} checked={this.primaryValue === option} onInput={this.handleInput} />
+  //               <span>{option}</span>
+  //             </label>
+  //           ))}
+  //         </div>
+  //       );
+
+  //     case 'DatePicker':
+  //       // const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  //       const twentyYearsAgo = new Date();
+  //       twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
+  //       const max = twentyYearsAgo.toISOString().split('T')[0];
+  //       return (
+  //         <div class="input-wrapper">
+  //           <input type="date" max={max} value={this.primaryValue} onInput={this.handleInput} ref={el => (this.primaryInput = el)} required />
+  //         </div>
+  //       );
+
+  //     case 'Email':
+  //       return (
+  //         <div class="input-wrapper">
+  //           <input
+  //             type="email"
+  //             placeholder={this.currentQuestion.component.label || 'Enter email address'}
+  //             value={this.primaryValue}
+  //             onInput={this.handleInput}
+  //             ref={el => (this.primaryInput = el)}
+  //             required
+  //             pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+  //             title="Please enter a valid email address"
+  //           />
+  //         </div>
+  //       );
+
+  //     case 'Password':
+  //       return (
+  //         <div class="input-wrapper">
+  //           <input
+  //             type="password"
+  //             placeholder={this.currentQuestion.component.label || 'Enter Password'}
+  //             value={this.primaryValue}
+  //             onInput={this.handleInput}
+  //             ref={el => (this.primaryInput = el)}
+  //             required
+  //             minLength={8} // Example: Minimum length for password validation
+  //             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" // Example: Regex for password strength
+  //             title="Password must be at least 8 characters long, including an uppercase letter, a lowercase letter, and a number."
+  //           />
+  //         </div>
+  //       );
+  //     case 'SSN':
+  //       const formatSSN = event => {
+  //         let value = event.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+  //         if (value.length > 3 && value.length <= 5) {
+  //           value = value.replace(/^(\d{3})(\d{0,2})/, '$1-$2'); // Format as ###-##
+  //         } else if (value.length > 5) {
+  //           value = value.replace(/^(\d{3})(\d{2})(\d{0,4})/, '$1-$2-$3'); // Format as ###-##-####
+  //         }
+  //         event.target.value = value; // Update the input value
+  //         this.primaryValue = value; // Update the internal state
+  //         this.handleInput(event); // Call the existing input handler
+  //       };
+
+  //       return (
+  //         <div class="input-wrapper">
+  //           <input
+  //             type="text"
+  //             placeholder={this.currentQuestion.component.label || 'Enter SSN'}
+  //             value={this.primaryValue}
+  //             onInput={formatSSN}
+  //             ref={el => (this.primaryInput = el)}
+  //             required
+  //             maxLength={11} // SSN Format: ###-##-####
+  //             pattern="\d{3}-\d{2}-\d{4}" // Regex to enforce SSN format
+  //             title="SSN must be in the format ###-##-####"
+  //           />
+  //         </div>
+  //       );
+  //     default:
+  //       return null;
+  //   }
+  // }
 
   //masks ssn
   private maskSSN(ssn: string): string {
@@ -570,26 +1122,43 @@ export class InsuranceChat {
   }
 
   // private renderPreviousAnswers() {
-  //   // Create a copy of answers array and reverse it
   //   const reversedAnswers = [...this.answers].reverse();
 
   //   return reversedAnswers.map((answer, index) => {
-  //     // Calculate the original index for edit functionality
   //     const originalIndex = this.answers.length - 1 - index;
+
+  //     let displayAnswer = answer.answer.toString();
+
+  //     // If answer contains multiple parts (comma-separated)
+  //     if (displayAnswer.includes(', ')) {
+  //       const parts = displayAnswer.split(', ');
+  //       const types = Array.isArray(this.currentQuestion.component) ? this.currentQuestion.component.map(comp => comp.type) : [this.currentQuestion.component?.type];
+
+  //       displayAnswer = parts
+  //         .map((part, i) => {
+  //           // Only mask if the type is specifically SSN or Password
+  //           if (types[i] === 'SSN') {
+  //             return this.maskSSN(part);
+  //           } else if (types[i] === 'Password') {
+  //             return this.maskPassword(part);
+  //           }
+  //           return part; // Leave all other parts unchanged
+  //         })
+  //         .join(', ');
+  //     } else {
+  //       // Single answer - mask only if type is SSN or Password
+  //       if (answer.type === 'SSN') {
+  //         displayAnswer = this.maskSSN(displayAnswer);
+  //       } else if (answer.type === 'Password') {
+  //         displayAnswer = this.maskPassword(displayAnswer);
+  //       }
+  //     }
 
   //     return (
   //       <div class="previous-answer" key={originalIndex}>
   //         <div class="answer-header">{answer.question}</div>
   //         <div class="answer-content">
-  //           <span>
-  //             {/\bpassword\b/i.test(answer.type)
-  //               ? this.maskPassword(answer.answer.toString())
-  //               : /\bssn\b/i.test(answer.type)
-  //               ? this.maskSSN(answer.answer.toString())
-  //               : typeof answer.answer === 'string'
-  //               ? answer.answer
-  //               : JSON.stringify(answer.answer)}
-  //           </span>
+  //           <span>{displayAnswer}</span>
   //           <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
   //         </div>
   //       </div>
@@ -598,26 +1167,93 @@ export class InsuranceChat {
   // }
 
   private renderPreviousAnswers() {
-    return this.answers.map((answer, index) => (
-      <div class="previous-answer" key={index}>
-        <div class="answer-header">{answer.question}</div>
-        <div class="answer-content">
-          <span>
-            {/\bpassword\b/i.test(answer.type)
-              ? this.maskPassword(answer.answer.toString()) // Mask passwords completely
-              : /\bssn\b/i.test(answer.type)
-              ? this.maskSSN(answer.answer.toString()) // Mask SSNs
-              : typeof answer.answer === 'string'
-              ? answer.answer
-              : JSON.stringify(answer.answer)}
-          </span>
-          {/* <span>{/\bpassword\b/i.test(answer.question) ? '******' : typeof answer.answer === 'string' ? answer.answer : JSON.stringify(answer.answer)}</span> */}
-          {/* <span>{typeof answer.answer === 'string' ? answer.answer : JSON.stringify(answer.answer)}</span> */}
-          <button class="edit-button" onClick={() => this.showEditConfirmation(index)} aria-label="Edit answer"></button>
+    const reversedAnswers = [...this.answers].reverse();
+
+    return reversedAnswers.map((answer, index) => {
+      const originalIndex = this.answers.length - 1 - index;
+
+      let displayAnswer = answer.answer.toString();
+
+      // If answer contains multiple parts (comma-separated)
+      if (displayAnswer.includes(', ')) {
+        const parts = displayAnswer.split(', ');
+        const types = answer.type.split(','); // Split "TextBox,Password,SSN" into ["TextBox", "Password", "SSN"]
+
+        displayAnswer = parts
+          .map((part, i) => {
+            if (types[i] === 'SSN') {
+              return this.maskSSN(part);
+            } else if (types[i] === 'Password') {
+              return this.maskPassword(part);
+            }
+            return part;
+          })
+          .join(', ');
+      } else {
+        // Single answer - mask only if type is SSN or Password
+        if (answer.type === 'SSN') {
+          displayAnswer = this.maskSSN(displayAnswer);
+        } else if (answer.type === 'Password') {
+          displayAnswer = this.maskPassword(displayAnswer);
+        }
+      }
+
+      return (
+        <div class="previous-answer" key={originalIndex}>
+          <div class="answer-header">{answer.question}</div>
+          <div class="answer-content">
+            <span>{displayAnswer}</span>
+            <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
+          </div>
         </div>
-      </div>
-    ));
+      );
+    });
   }
+  // private renderPreviousAnswers() {
+  //   const reversedAnswers = [...this.answers].reverse();
+
+  //   return reversedAnswers.map((answer, index) => {
+  //     const originalIndex = this.answers.length - 1 - index;
+
+  //     // Handle comma-separated answers
+  //     const displayAnswer = answer.answer
+  //       .toString()
+  //       .split(', ')
+  //       .map((part, partIndex) => {
+  //         // Check if this part should be masked based on component type
+  //         if (Array.isArray(this.currentQuestion.component)) {
+  //           const componentType = this.currentQuestion.component[partIndex]?.type;
+  //           if (componentType === 'Password') {
+  //             return this.maskPassword(part);
+  //           }
+  //           if (componentType === 'SSN') {
+  //             return this.maskSSN(part);
+  //           }
+  //         }
+  //         return part;
+  //       })
+  //       .join(', ');
+
+  //     // let displayAnswer = answer.answer.toString();
+
+  //     // // Check the answer type directly
+  //     // if (answer.type === 'Password') {
+  //     //   displayAnswer = this.maskPassword(displayAnswer);
+  //     // } else if (answer.type === 'SSN') {
+  //     //   displayAnswer = this.maskSSN(displayAnswer);
+  //     // }
+
+  //     return (
+  //       <div class="previous-answer" key={originalIndex}>
+  //         <div class="answer-header">{answer.question}</div>
+  //         <div class="answer-content">
+  //           <span>{displayAnswer}</span>
+  //           <button class="edit-button" onClick={() => this.showEditConfirmation(originalIndex)} aria-label="Edit answer"></button>
+  //         </div>
+  //       </div>
+  //     );
+  //   });
+  // }
 
   private renderCurrentQuestion() {
     if (!this.currentQuestion) return null;
@@ -625,14 +1261,21 @@ export class InsuranceChat {
     return (
       <div class="current-question">
         <div class="avatar">
-          {/* <img src="https://www.egain.com/chatbot/robin/Chatbot-1-big.jpg" alt="Agent avatar" /> */}
-          <img src="https://raw.githubusercontent.com/dpmanek/images/refs/heads/main/Deep%20Manek%20image.png" alt="Agent avatar" />
+          <img src="/assets/image/Bot Avatar 2.png" alt="Agent avatar" />
+          {/* <img src="https://raw.githubusercontent.com/dpmanek/images/refs/heads/main/Deep%20Manek%20image.png" alt="Agent avatar" /> */}
         </div>
         <div class="question-content">
-          <div class="question-text"></div>
-          {this.currentQuestion.component && this.showForm && (
+          <div class="question-text" style={{ display: this.isLoading ? 'none' : 'block' }}></div>
+          {this.isLoading && (
+            <div class="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          )}
+          {!this.isLoading && this.currentQuestion.component && this.showForm && (
             <form onSubmit={e => this.handleSubmit(e)} class="question-form visible">
-              <div class="input-group">
+              <div class="input-groupName">
                 {!this.userName
                   ? [
                       <div class="input-wrapper">
@@ -647,7 +1290,14 @@ export class InsuranceChat {
               {this.validationError && <div class="validation-error">{this.validationError}</div>}
               <button
                 type="submit"
-                disabled={this.isLoading || (!this.userName && (!this.firstName.trim() || !this.lastName.trim())) || (this.userName && !this.primaryValue.trim())}
+                disabled={
+                  this.isLoading ||
+                  (!this.userName
+                    ? !this.firstName.trim() || !this.lastName.trim()
+                    : Array.isArray(this.currentQuestion.component)
+                    ? this.currentQuestion.component.some((_, index) => !this.inputValues[`component-${index}`]?.trim())
+                    : !this.inputValues['component-0']?.trim())
+                }
               >
                 {this.isLoading ? 'Loading...' : this.answers.length === 0 ? 'Get started' : 'Next'}
               </button>
@@ -662,6 +1312,99 @@ export class InsuranceChat {
       </div>
     );
   }
+  // private renderCurrentQuestion() {
+  //   if (!this.currentQuestion) return null;
+
+  //   return (
+  //     <div class="current-question">
+  //       <div class="avatar">
+  //         {/* <img src="https://www.egain.com/chatbot/robin/Chatbot-1-big.jpg" alt="Agent avatar" /> */}
+  //         <img src="https://raw.githubusercontent.com/dpmanek/images/refs/heads/main/Deep%20Manek%20image.png" alt="Agent avatar" />
+  //       </div>
+  //       <div class="question-content">
+  //         <div class="question-text"></div>
+  //         {this.currentQuestion.component && this.showForm && (
+  //           <form onSubmit={e => this.handleSubmit(e)} class="question-form visible">
+  //             <div class="input-groupName">
+  //               {!this.userName
+  //                 ? [
+  //                     <div class="input-wrapper">
+  //                       <input type="text" placeholder="First name" value={this.firstName} onInput={this.handleFirstNameInput} ref={el => (this.firstNameInput = el)} required />
+  //                     </div>,
+  //                     <div class="input-wrapper">
+  //                       <input type="text" placeholder="Last name" value={this.lastName} onInput={this.handleLastNameInput} required />
+  //                     </div>,
+  //                   ]
+  //                 : this.renderFormComponent()}
+  //             </div>
+  //             {this.validationError && <div class="validation-error">{this.validationError}</div>}
+  //             <button
+  //               type="submit"
+  //               disabled={
+  //                 this.isLoading ||
+  //                 (!this.userName
+  //                   ? !this.firstName.trim() || !this.lastName.trim()
+  //                   : Array.isArray(this.currentQuestion.component)
+  //                   ? this.currentQuestion.component.some((_, index) => !this.inputValues[`component-${index}`]?.trim())
+  //                   : !this.inputValues['component-0']?.trim())
+  //               }
+  //             >
+  //               {this.isLoading ? 'Loading...' : this.answers.length === 0 ? 'Get started' : 'Next'}
+  //             </button>
+  //           </form>
+  //         )}
+  //         {this.progress > 0 && (
+  //           <div class="progress-bar">
+  //             <div class="progress" style={{ width: `${this.progress}%` }}></div>
+  //           </div>
+  //         )}
+  //       </div>
+  //     </div>
+  //   );
+  // }
+  // private renderCurrentQuestion() {
+  //   if (!this.currentQuestion) return null;
+
+  //   return (
+  //     <div class="current-question">
+  //       <div class="avatar">
+  //         {/* <img src="https://www.egain.com/chatbot/robin/Chatbot-1-big.jpg" alt="Agent avatar" /> */}
+  //         <img src="https://raw.githubusercontent.com/dpmanek/images/refs/heads/main/Deep%20Manek%20image.png" alt="Agent avatar" />
+  //       </div>
+  //       <div class="question-content">
+  //         <div class="question-text"></div>
+  //         {this.currentQuestion.component && this.showForm && (
+  //           <form onSubmit={e => this.handleSubmit(e)} class="question-form visible">
+  //             <div class="input-group">
+  //               {!this.userName
+  //                 ? [
+  //                     <div class="input-wrapper">
+  //                       <input type="text" placeholder="First name" value={this.firstName} onInput={this.handleFirstNameInput} ref={el => (this.firstNameInput = el)} required />
+  //                     </div>,
+  //                     <div class="input-wrapper">
+  //                       <input type="text" placeholder="Last name" value={this.lastName} onInput={this.handleLastNameInput} required />
+  //                     </div>,
+  //                   ]
+  //                 : this.renderFormComponent()}
+  //             </div>
+  //             {this.validationError && <div class="validation-error">{this.validationError}</div>}
+  //             <button
+  //               type="submit"
+  //               disabled={this.isLoading || (!this.userName && (!this.firstName.trim() || !this.lastName.trim())) || (this.userName && !this.primaryValue.trim())}
+  //             >
+  //               {this.isLoading ? 'Loading...' : this.answers.length === 0 ? 'Get started' : 'Next'}
+  //             </button>
+  //           </form>
+  //         )}
+  //         {this.progress > 0 && (
+  //           <div class="progress-bar">
+  //             <div class="progress" style={{ width: `${this.progress}%` }}></div>
+  //           </div>
+  //         )}
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   private renderEditModal() {
     if (!this.showEditModal) return null;
@@ -687,12 +1430,12 @@ export class InsuranceChat {
   render() {
     return (
       <div class="app-wrapper">
-        <app-navbar></app-navbar>
         <div class="container">
+          <app-navbar></app-navbar>
           {/* <div class="chat-interface"> */}
           <div class="chat-interface" ref={el => (this.chatInterface = el as HTMLElement)}>
-            {this.renderPreviousAnswers()}
             {this.renderCurrentQuestion()}
+            {this.renderPreviousAnswers()}
           </div>
           {this.renderEditModal()}
         </div>

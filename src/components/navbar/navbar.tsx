@@ -3,7 +3,7 @@ import { Component, h } from '@stencil/core';
 @Component({
   tag: 'app-navbar',
   styleUrl: 'navbar.css',
-  shadow: true,
+  shadow: false,
 })
 export class Navbar {
   render() {
