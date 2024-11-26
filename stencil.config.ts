@@ -18,6 +18,8 @@ export const config: Config = {
     {
       type: 'www',
       serviceWorker: null, // disable service workers
+      // baseUrl: '/StencilBedrockAgenticUI/',
+      // empty: false,
     },
   ],
   testing: {
