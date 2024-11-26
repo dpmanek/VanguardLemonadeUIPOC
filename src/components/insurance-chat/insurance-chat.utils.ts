@@ -93,10 +93,10 @@ export const startTyping = async (element: Element | null, text: string, typingS
 };
 
 /** Actually - Bedrock */
-export const getMockBedrockResponse1 = async (sessionId: string, inquiry: string, answersLength: number = 1): Promise<BedrockResponse> => {
+export const getMockBedrockResponse1 = async (sessionId: string, inquiry: string): Promise<BedrockResponse> => {
   try {
     const url1 = 'https://4nm82v58i4.execute-api.us-east-1.amazonaws.com/dev/chat';
-    const url2 = 'http://localhost:7000/chat2';
+    // const url2 = 'http://localhost:7000/chat2'
 
     console.log('message to api');
     console.log(inquiry);
@@ -136,7 +136,7 @@ export const getMockBedrockResponse1 = async (sessionId: string, inquiry: string
   }
 };
 
-export const EditMockBedrockResponse1 = async (sessionId: string, previousQuestion: string, previousAnswer: string, answersLength: number = 1): Promise<BedrockResponse> => {
+export const EditMockBedrockResponse1 = async (sessionId: string, previousAnswer: string): Promise<BedrockResponse> => {
   try {
     console.log('Sending Edit Request');
     // console.log('previousQuestion:::::');

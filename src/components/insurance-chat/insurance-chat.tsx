@@ -1,16 +1,7 @@
 import { Component, State, Element, h } from '@stencil/core';
 import Typed from 'typed.js';
 // import { ValidationRule, FormComponent, BedrockResponse, validateInput, startTyping, getMockBedrockResponse } from './insurance-chat.utils';
-import {
-  ValidationRule,
-  FormComponent,
-  BedrockResponse,
-  validateInput,
-  startTyping,
-  getMockBedrockResponse1,
-  EditMockBedrockResponse1,
-  generateSessionId,
-} from './insurance-chat.utils';
+import { FormComponent, validateInput, getMockBedrockResponse1, EditMockBedrockResponse1, generateSessionId } from './insurance-chat.utils';
 
 interface ChatAnswer {
   question: string;
@@ -270,7 +261,7 @@ export class InsuranceChat {
         console.log('previousAnswer::::' + previousAnswer);
         console.log('Type::::' + previousQuestionType);
         // const mockResponse = await getMockBedrockResponse1(this.sessionId, previousAnswer, index);
-        const mockResponse = await EditMockBedrockResponse1(this.sessionId, previousQuestion, previousAnswer, index);
+        const mockResponse = await EditMockBedrockResponse1(this.sessionId, previousAnswer);
         // console.log('mockResponse::::');
         // console.log(mockResponse);
         // Set progress based on the current position in the conversation
@@ -361,7 +352,7 @@ export class InsuranceChat {
         this.lastName = '';
 
         try {
-          const response = await getMockBedrockResponse1(this.sessionId, `Hi I am ${this.userName}`, 1);
+          const response = await getMockBedrockResponse1(this.sessionId, `Hi I am ${this.userName}`);
           this.progress = response.progress;
           this.currentQuestion = {
             text: response.text,
@@ -406,7 +397,7 @@ export class InsuranceChat {
         }
       }, 0);
 
-      const response = await getMockBedrockResponse1(this.sessionId, formattedAnswer, this.answers.length);
+      const response = await getMockBedrockResponse1(this.sessionId, formattedAnswer);
       this.progress = response.progress;
       this.currentQuestion = {
         text: response.text,
