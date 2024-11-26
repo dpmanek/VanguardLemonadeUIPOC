@@ -139,18 +139,20 @@ export const getMockBedrockResponse1 = async (sessionId: string, inquiry: string
 export const EditMockBedrockResponse1 = async (sessionId: string, previousQuestion: string, previousAnswer: string, answersLength: number = 1): Promise<BedrockResponse> => {
   try {
     console.log('Sending Edit Request');
-    console.log('previousQuestion:::::');
-    console.log(previousQuestion);
-    console.log('previousAnswer:::::');
-    console.log(previousAnswer);
+    // console.log('previousQuestion:::::');
+    // console.log(previousQuestion);
+    // console.log('previousAnswer:::::');
+    // console.log(previousAnswer);
+
+    const useredit = `Remove all captured information after "${previousAnswer}". Capture "${previousAnswer}" and reset everything after. No confirmation required.`;
+    console.log(useredit);
 
     const response = await axios.post(
       'https://4nm82v58i4.execute-api.us-east-1.amazonaws.com/dev/chat',
       {
         session_id: sessionId,
-        message: `Previous question: ${previousQuestion}. Previous answer: ${previousAnswer}. Reset all information after this field in the flow. No confirmation required.`,
-        // previousQuestion: `${previousQuestion}`,
-        // previousAnswer: `${previousAnswer}. Reset all information after this field in the flow. No confirmation required.`,
+        message: useredit,
+        // message: `Previous question: ${previousQuestion}. Previous answer: ${previousAnswer}. Reset all information after this field in the flow. No confirmation required.`,
       },
       {
         headers: {

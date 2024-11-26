@@ -3,7 +3,9 @@
   display: flex;
   flex-direction: column;
 }
-
+input[type='text'] {
+  width: 228px;
+}
 .container {
   display: flex;
   justify-content: center;
@@ -241,11 +243,11 @@
   margin-bottom: 8px;
   color: #949494;
   /* color: #666; */
-  font-weight: 600;
+  font-weight: 300;
 }
 
 .answer-content {
-  font-size: 15px;
+  font-size: 16px;
   color: #4a4a4a;
   font-weight: 600;
   /* color: #2d2d2d; */
@@ -482,9 +484,9 @@ select {
   -webkit-appearance: none;
 }
 
-input[type='text'] {
+/* input[type='text'] {
   width: 180px;
-}
+} */
 
 input[type='date'] {
   width: 140px;

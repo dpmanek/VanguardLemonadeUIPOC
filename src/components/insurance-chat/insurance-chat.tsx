@@ -1273,7 +1273,8 @@ export class InsuranceChat {
               <span></span>
             </div>
           )}
-          {!this.isLoading && this.currentQuestion.component && this.showForm && (
+
+          {!this.isLoading && this.currentQuestion.component && (!Array.isArray(this.currentQuestion.component) || this.currentQuestion.component.length > 0) && this.showForm && (
             <form onSubmit={e => this.handleSubmit(e)} class="question-form visible">
               <div class="input-groupName">
                 {!this.userName
@@ -1303,6 +1304,7 @@ export class InsuranceChat {
               </button>
             </form>
           )}
+
           {this.progress > 0 && (
             <div class="progress-bar">
               <div class="progress" style={{ width: `${this.progress}%` }}></div>
@@ -1312,6 +1314,65 @@ export class InsuranceChat {
       </div>
     );
   }
+
+  // private renderCurrentQuestion() {
+  //   if (!this.currentQuestion) return null;
+
+  //   return (
+  //     <div class="current-question">
+  //       <div class="avatar">
+  //         <img src="/assets/image/Bot Avatar 2.png" alt="Agent avatar" />
+  //         {/* <img src="https://raw.githubusercontent.com/dpmanek/images/refs/heads/main/Deep%20Manek%20image.png" alt="Agent avatar" /> */}
+  //       </div>
+  //       <div class="question-content">
+  //         <div class="question-text" style={{ display: this.isLoading ? 'none' : 'block' }}></div>
+  //         {this.isLoading && (
+  //           <div class="typing-indicator">
+  //             <span></span>
+  //             <span></span>
+  //             <span></span>
+  //           </div>
+  //         )}
+  //         {!this.isLoading && this.currentQuestion.component && this.showForm && (
+  //           <form onSubmit={e => this.handleSubmit(e)} class="question-form visible">
+  //             <div class="input-groupName">
+  //               {!this.userName
+  //                 ? [
+  //                     <div class="input-wrapper">
+  //                       <input type="text" placeholder="First name" value={this.firstName} onInput={this.handleFirstNameInput} ref={el => (this.firstNameInput = el)} required />
+  //                     </div>,
+  //                     <div class="input-wrapper">
+  //                       <input type="text" placeholder="Last name" value={this.lastName} onInput={this.handleLastNameInput} required />
+  //                     </div>,
+  //                   ]
+  //                 : this.renderFormComponent()}
+  //             </div>
+  //             {this.validationError && <div class="validation-error">{this.validationError}</div>}
+  //             <button
+  //               type="submit"
+  //               disabled={
+  //                 this.isLoading ||
+  //                 (!this.userName
+  //                   ? !this.firstName.trim() || !this.lastName.trim()
+  //                   : Array.isArray(this.currentQuestion.component)
+  //                   ? this.currentQuestion.component.some((_, index) => !this.inputValues[`component-${index}`]?.trim())
+  //                   : !this.inputValues['component-0']?.trim())
+  //               }
+  //             >
+  //               {this.isLoading ? 'Loading...' : this.answers.length === 0 ? 'Get started' : 'Next'}
+  //               {/* {this.isLoading ? 'Loading...' : this.answers.length === 0 ? 'Get started' : this.currentQuestion.component[0] ? 'Next' : null} */}
+  //             </button>
+  //           </form>
+  //         )}
+  //         {this.progress > 0 && (
+  //           <div class="progress-bar">
+  //             <div class="progress" style={{ width: `${this.progress}%` }}></div>
+  //           </div>
+  //         )}
+  //       </div>
+  //     </div>
+  //   );
+  // }
   // private renderCurrentQuestion() {
   //   if (!this.currentQuestion) return null;
 
