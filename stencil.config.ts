@@ -18,8 +18,8 @@ export const config: Config = {
     {
       type: 'www',
       serviceWorker: null, // disable service workers
-      baseUrl: '/VanguardLemonadeUIPOC/',
-      // empty: false,
+      baseUrl: 'https://dpmanek.github.io/VanguardLemonadeUIPOC/',
+      empty: true,
     },
   ],
   testing: {
